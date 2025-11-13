@@ -51,7 +51,7 @@ namespace WebApplication_GestorClinico.Controllers
         public IActionResult Create()
         {
             ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id");
-            ViewData["EspecialidadId"] = new SelectList(_context.Set<Especialidad>(), "Id", "Id");
+            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id");
             ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id");
             return View();
         }
@@ -61,7 +61,7 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Matricula,EspecialidadId,Dni,Nombre,Apellido,email,UsuarioId,ClinicaId")] Medico medico)
+        public async Task<IActionResult> Create([Bind("Id,Matricula,EspecialidadId,Dni,Nombre,Apellido,Email,UsuarioId,ClinicaId,Activo")] Medico medico)
         {
             if (ModelState.IsValid)
             {
@@ -70,7 +70,7 @@ namespace WebApplication_GestorClinico.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", medico.ClinicaId);
-            ViewData["EspecialidadId"] = new SelectList(_context.Set<Especialidad>(), "Id", "Id", medico.EspecialidadId);
+            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", medico.EspecialidadId);
             ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", medico.UsuarioId);
             return View(medico);
         }
@@ -89,7 +89,7 @@ namespace WebApplication_GestorClinico.Controllers
                 return NotFound();
             }
             ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", medico.ClinicaId);
-            ViewData["EspecialidadId"] = new SelectList(_context.Set<Especialidad>(), "Id", "Id", medico.EspecialidadId);
+            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", medico.EspecialidadId);
             ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", medico.UsuarioId);
             return View(medico);
         }
@@ -99,7 +99,7 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Matricula,EspecialidadId,Dni,Nombre,Apellido,email,UsuarioId,ClinicaId")] Medico medico)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Matricula,EspecialidadId,Dni,Nombre,Apellido,Email,UsuarioId,ClinicaId,Activo")] Medico medico)
         {
             if (id != medico.Id)
             {
@@ -127,7 +127,7 @@ namespace WebApplication_GestorClinico.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", medico.ClinicaId);
-            ViewData["EspecialidadId"] = new SelectList(_context.Set<Especialidad>(), "Id", "Id", medico.EspecialidadId);
+            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", medico.EspecialidadId);
             ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", medico.UsuarioId);
             return View(medico);
         }

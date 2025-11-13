@@ -57,7 +57,7 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Barrio,Direccion,Telefono,ClinicaId")] CentroMedico centroMedico)
+        public async Task<IActionResult> Create([Bind("Id,Barrio,Direccion,Telefono,ClinicaId,Activo")] CentroMedico centroMedico)
         {
             if (ModelState.IsValid)
             {
@@ -91,7 +91,7 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Barrio,Direccion,Telefono,ClinicaId")] CentroMedico centroMedico)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Barrio,Direccion,Telefono,ClinicaId,Activo")] CentroMedico centroMedico)
         {
             if (id != centroMedico.Id)
             {

@@ -5,13 +5,11 @@
         public int Id { get; set; }
         public string Nombre { get; set; }
 
-        // --- Relación 1-N con CentroMedico ---
-        // (Esta Guardia pertenece a UN CentroMedico)
+        // Relación 1-N con CentroMedico
         public int CentroMedicoId { get; set; }
         public virtual CentroMedico CentroMedico { get; set; }
 
-        // --- Relación 1-N con ColaDePacientes ---
-        // (Esta Guardia tiene MUCHOS pacientes en espera)
+        // Relación 1-N con ColaDePacientes
         public virtual ICollection<PacienteEnEspera> PacientesEnEspera { get; set; } 
 
     }

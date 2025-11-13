@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebApplication_GestorClinico.Migrations
 {
     /// <inheritdoc />
-    public partial class CrearBd : Migration
+    public partial class disenioDeClases : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -25,7 +25,21 @@ namespace WebApplication_GestorClinico.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Especialidad",
+                name: "Especialidades",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Especialidades", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Estados",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -34,7 +48,7 @@ namespace WebApplication_GestorClinico.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Especialidad", x => x.Id);
+                    table.PrimaryKey("PK_Estados", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -59,7 +73,8 @@ namespace WebApplication_GestorClinico.Migrations
                     Barrio = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Direccion = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Telefono = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ClinicaId = table.Column<int>(type: "int", nullable: false)
+                    ClinicaId = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -80,7 +95,8 @@ namespace WebApplication_GestorClinico.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Contrasenia = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RolId = table.Column<int>(type: "int", nullable: false)
+                    RolId = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -123,9 +139,10 @@ namespace WebApplication_GestorClinico.Migrations
                     Dni = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Apellido = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UsuarioId = table.Column<int>(type: "int", nullable: true),
-                    ClinicaId = table.Column<int>(type: "int", nullable: false)
+                    ClinicaId = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -154,9 +171,10 @@ namespace WebApplication_GestorClinico.Migrations
                     Dni = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Apellido = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UsuarioId = table.Column<int>(type: "int", nullable: true),
-                    ClinicaId = table.Column<int>(type: "int", nullable: false)
+                    ClinicaId = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -168,9 +186,9 @@ namespace WebApplication_GestorClinico.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Medicos_Especialidad_EspecialidadId",
+                        name: "FK_Medicos_Especialidades_EspecialidadId",
                         column: x => x.EspecialidadId,
-                        principalTable: "Especialidad",
+                        principalTable: "Especialidades",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -190,9 +208,10 @@ namespace WebApplication_GestorClinico.Migrations
                     Dni = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Apellido = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UsuarioId = table.Column<int>(type: "int", nullable: true),
-                    ClinicaId = table.Column<int>(type: "int", nullable: false)
+                    ClinicaId = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -211,20 +230,46 @@ namespace WebApplication_GestorClinico.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HistoriasClinicas",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PacienteId = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HistoriasClinicas", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HistoriasClinicas_Pacientes_PacienteId",
+                        column: x => x.PacienteId,
+                        principalTable: "Pacientes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PacientesEnEspera",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    GuardiaId = table.Column<int>(type: "int", nullable: false),
-                    PacienteId = table.Column<int>(type: "int", nullable: false),
                     HoraDeIngreso = table.Column<DateTime>(type: "datetime2", nullable: false),
                     HoraAtencion = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    AbandonoVoluntario = table.Column<bool>(type: "bit", nullable: false)
+                    GuardiaId = table.Column<int>(type: "int", nullable: false),
+                    PacienteId = table.Column<int>(type: "int", nullable: false),
+                    EstadoId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PacientesEnEspera", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PacientesEnEspera_Estados_EstadoId",
+                        column: x => x.EstadoId,
+                        principalTable: "Estados",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_PacientesEnEspera_Guardias_GuardiaId",
                         column: x => x.GuardiaId,
@@ -235,6 +280,122 @@ namespace WebApplication_GestorClinico.Migrations
                         name: "FK_PacientesEnEspera_Pacientes_PacienteId",
                         column: x => x.PacienteId,
                         principalTable: "Pacientes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Turnos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FechaHoraInicio = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DuracionEnMinutos = table.Column<int>(type: "int", nullable: false),
+                    EstadoId = table.Column<int>(type: "int", nullable: false),
+                    Activo = table.Column<bool>(type: "bit", nullable: false),
+                    CentroMedicoId = table.Column<int>(type: "int", nullable: false),
+                    MedicoId = table.Column<int>(type: "int", nullable: false),
+                    EspecialidadId = table.Column<int>(type: "int", nullable: false),
+                    PacienteId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Turnos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Turnos_CentrosMedicos_CentroMedicoId",
+                        column: x => x.CentroMedicoId,
+                        principalTable: "CentrosMedicos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Turnos_Especialidades_EspecialidadId",
+                        column: x => x.EspecialidadId,
+                        principalTable: "Especialidades",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Turnos_Estados_EstadoId",
+                        column: x => x.EstadoId,
+                        principalTable: "Estados",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Turnos_Medicos_MedicoId",
+                        column: x => x.MedicoId,
+                        principalTable: "Medicos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Turnos_Pacientes_PacienteId",
+                        column: x => x.PacienteId,
+                        principalTable: "Pacientes",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EvolucionesMedicas",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Fecha = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Diagnostico = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Tratamiento = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Observacion = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    HistoriaClinicaId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EvolucionesMedicas", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EvolucionesMedicas_HistoriasClinicas_HistoriaClinicaId",
+                        column: x => x.HistoriaClinicaId,
+                        principalTable: "HistoriasClinicas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrdenesMedicas",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Fecha = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    NombreEstudio = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Diagnostico = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    HistoriaClinicaId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrdenesMedicas", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrdenesMedicas_HistoriasClinicas_HistoriaClinicaId",
+                        column: x => x.HistoriaClinicaId,
+                        principalTable: "HistoriasClinicas",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Recetas",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Cantidad = table.Column<int>(type: "int", nullable: false),
+                    Medicamento = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Dosis = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    HistoriaClinicaId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Recetas", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Recetas_HistoriasClinicas_HistoriaClinicaId",
+                        column: x => x.HistoriaClinicaId,
+                        principalTable: "HistoriasClinicas",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -257,9 +418,20 @@ namespace WebApplication_GestorClinico.Migrations
                 column: "ClinicaId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_EvolucionesMedicas_HistoriaClinicaId",
+                table: "EvolucionesMedicas",
+                column: "HistoriaClinicaId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Guardias_CentroMedicoId",
                 table: "Guardias",
                 column: "CentroMedicoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HistoriasClinicas_PacienteId",
+                table: "HistoriasClinicas",
+                column: "PacienteId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Medicos_ClinicaId",
@@ -279,6 +451,11 @@ namespace WebApplication_GestorClinico.Migrations
                 filter: "[UsuarioId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrdenesMedicas_HistoriaClinicaId",
+                table: "OrdenesMedicas",
+                column: "HistoriaClinicaId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Pacientes_ClinicaId",
                 table: "Pacientes",
                 column: "ClinicaId");
@@ -291,6 +468,11 @@ namespace WebApplication_GestorClinico.Migrations
                 filter: "[UsuarioId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PacientesEnEspera_EstadoId",
+                table: "PacientesEnEspera",
+                column: "EstadoId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PacientesEnEspera_GuardiaId",
                 table: "PacientesEnEspera",
                 column: "GuardiaId");
@@ -298,6 +480,36 @@ namespace WebApplication_GestorClinico.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_PacientesEnEspera_PacienteId",
                 table: "PacientesEnEspera",
+                column: "PacienteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Recetas_HistoriaClinicaId",
+                table: "Recetas",
+                column: "HistoriaClinicaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Turnos_CentroMedicoId",
+                table: "Turnos",
+                column: "CentroMedicoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Turnos_EspecialidadId",
+                table: "Turnos",
+                column: "EspecialidadId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Turnos_EstadoId",
+                table: "Turnos",
+                column: "EstadoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Turnos_MedicoId",
+                table: "Turnos",
+                column: "MedicoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Turnos_PacienteId",
+                table: "Turnos",
                 column: "PacienteId");
 
             migrationBuilder.CreateIndex(
@@ -313,28 +525,46 @@ namespace WebApplication_GestorClinico.Migrations
                 name: "Administrativos");
 
             migrationBuilder.DropTable(
-                name: "Medicos");
+                name: "EvolucionesMedicas");
+
+            migrationBuilder.DropTable(
+                name: "OrdenesMedicas");
 
             migrationBuilder.DropTable(
                 name: "PacientesEnEspera");
 
             migrationBuilder.DropTable(
-                name: "Especialidad");
+                name: "Recetas");
+
+            migrationBuilder.DropTable(
+                name: "Turnos");
 
             migrationBuilder.DropTable(
                 name: "Guardias");
 
             migrationBuilder.DropTable(
-                name: "Pacientes");
+                name: "HistoriasClinicas");
+
+            migrationBuilder.DropTable(
+                name: "Estados");
+
+            migrationBuilder.DropTable(
+                name: "Medicos");
 
             migrationBuilder.DropTable(
                 name: "CentrosMedicos");
 
             migrationBuilder.DropTable(
-                name: "Usuarios");
+                name: "Pacientes");
+
+            migrationBuilder.DropTable(
+                name: "Especialidades");
 
             migrationBuilder.DropTable(
                 name: "Clinicas");
+
+            migrationBuilder.DropTable(
+                name: "Usuarios");
 
             migrationBuilder.DropTable(
                 name: "Roles");

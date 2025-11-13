@@ -6,5 +6,6 @@ namespace WebApplication_GestorClinico.Models
     {
         public int Id { get; set; }
         public int Legajo { get; set; }
+
     }
 }

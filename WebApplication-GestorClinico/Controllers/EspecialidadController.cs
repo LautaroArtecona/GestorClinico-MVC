@@ -22,7 +22,7 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Especialidad
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Especialidad.ToListAsync());
+            return View(await _context.Especialidades.ToListAsync());
         }
 
         // GET: Especialidad/Details/5
@@ -33,7 +33,7 @@ namespace WebApplication_GestorClinico.Controllers
                 return NotFound();
             }
 
-            var especialidad = await _context.Especialidad
+            var especialidad = await _context.Especialidades
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (especialidad == null)
             {
@@ -54,7 +54,7 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre")] Especialidad especialidad)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Activo")] Especialidad especialidad)
         {
             if (ModelState.IsValid)
             {
@@ -73,7 +73,7 @@ namespace WebApplication_GestorClinico.Controllers
                 return NotFound();
             }
 
-            var especialidad = await _context.Especialidad.FindAsync(id);
+            var especialidad = await _context.Especialidades.FindAsync(id);
             if (especialidad == null)
             {
                 return NotFound();
@@ -86,7 +86,7 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre")] Especialidad especialidad)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Activo")] Especialidad especialidad)
         {
             if (id != especialidad.Id)
             {
@@ -124,7 +124,7 @@ namespace WebApplication_GestorClinico.Controllers
                 return NotFound();
             }
 
-            var especialidad = await _context.Especialidad
+            var especialidad = await _context.Especialidades
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (especialidad == null)
             {
@@ -139,10 +139,10 @@ namespace WebApplication_GestorClinico.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var especialidad = await _context.Especialidad.FindAsync(id);
+            var especialidad = await _context.Especialidades.FindAsync(id);
             if (especialidad != null)
             {
-                _context.Especialidad.Remove(especialidad);
+                _context.Especialidades.Remove(especialidad);
             }
 
             await _context.SaveChangesAsync();
@@ -151,7 +151,7 @@ namespace WebApplication_GestorClinico.Controllers
 
         private bool EspecialidadExists(int id)
         {
-            return _context.Especialidad.Any(e => e.Id == id);
+            return _context.Especialidades.Any(e => e.Id == id);
         }
     }
 }

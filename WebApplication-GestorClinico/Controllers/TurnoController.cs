@@ -22,7 +22,7 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Turno
         public async Task<IActionResult> Index()
         {
-            var clinicaDBContext = _context.Turnos.Include(t => t.CentroMedico).Include(t => t.Especialidad).Include(t => t.Medico).Include(t => t.Paciente);
+            var clinicaDBContext = _context.Turnos.Include(t => t.CentroMedico).Include(t => t.Especialidad).Include(t => t.Estado).Include(t => t.Medico).Include(t => t.Paciente);
             return View(await clinicaDBContext.ToListAsync());
         }
 
@@ -37,6 +37,7 @@ namespace WebApplication_GestorClinico.Controllers
             var turno = await _context.Turnos
                 .Include(t => t.CentroMedico)
                 .Include(t => t.Especialidad)
+                .Include(t => t.Estado)
                 .Include(t => t.Medico)
                 .Include(t => t.Paciente)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -53,6 +54,7 @@ namespace WebApplication_GestorClinico.Controllers
         {
             ViewData["CentroMedicoId"] = new SelectList(_context.CentrosMedicos, "Id", "Id");
             ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id");
+            ViewData["EstadoId"] = new SelectList(_context.Estados, "Id", "Id");
             ViewData["MedicoId"] = new SelectList(_context.Medicos, "Id", "Id");
             ViewData["PacienteId"] = new SelectList(_context.Pacientes, "Id", "Id");
             return View();
@@ -63,7 +65,7 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FechaHoraInicio,DuracionEnMinutos,Atendido,CentroMedicoId,MedicoId,EspecialidadId,PacienteId")] Turno turno)
+        public async Task<IActionResult> Create([Bind("Id,FechaHoraInicio,DuracionEnMinutos,EstadoId,Activo,CentroMedicoId,MedicoId,EspecialidadId,PacienteId")] Turno turno)
         {
             if (ModelState.IsValid)
             {
@@ -73,6 +75,7 @@ namespace WebApplication_GestorClinico.Controllers
             }
             ViewData["CentroMedicoId"] = new SelectList(_context.CentrosMedicos, "Id", "Id", turno.CentroMedicoId);
             ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", turno.EspecialidadId);
+            ViewData["EstadoId"] = new SelectList(_context.Estados, "Id", "Id", turno.EstadoId);
             ViewData["MedicoId"] = new SelectList(_context.Medicos, "Id", "Id", turno.MedicoId);
             ViewData["PacienteId"] = new SelectList(_context.Pacientes, "Id", "Id", turno.PacienteId);
             return View(turno);
@@ -93,6 +96,7 @@ namespace WebApplication_GestorClinico.Controllers
             }
             ViewData["CentroMedicoId"] = new SelectList(_context.CentrosMedicos, "Id", "Id", turno.CentroMedicoId);
             ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", turno.EspecialidadId);
+            ViewData["EstadoId"] = new SelectList(_context.Estados, "Id", "Id", turno.EstadoId);
             ViewData["MedicoId"] = new SelectList(_context.Medicos, "Id", "Id", turno.MedicoId);
             ViewData["PacienteId"] = new SelectList(_context.Pacientes, "Id", "Id", turno.PacienteId);
             return View(turno);
@@ -103,7 +107,7 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FechaHoraInicio,DuracionEnMinutos,Atendido,CentroMedicoId,MedicoId,EspecialidadId,PacienteId")] Turno turno)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,FechaHoraInicio,DuracionEnMinutos,EstadoId,Activo,CentroMedicoId,MedicoId,EspecialidadId,PacienteId")] Turno turno)
         {
             if (id != turno.Id)
             {
@@ -132,6 +136,7 @@ namespace WebApplication_GestorClinico.Controllers
             }
             ViewData["CentroMedicoId"] = new SelectList(_context.CentrosMedicos, "Id", "Id", turno.CentroMedicoId);
             ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", turno.EspecialidadId);
+            ViewData["EstadoId"] = new SelectList(_context.Estados, "Id", "Id", turno.EstadoId);
             ViewData["MedicoId"] = new SelectList(_context.Medicos, "Id", "Id", turno.MedicoId);
             ViewData["PacienteId"] = new SelectList(_context.Pacientes, "Id", "Id", turno.PacienteId);
             return View(turno);
@@ -148,6 +153,7 @@ namespace WebApplication_GestorClinico.Controllers
             var turno = await _context.Turnos
                 .Include(t => t.CentroMedico)
                 .Include(t => t.Especialidad)
+                .Include(t => t.Estado)
                 .Include(t => t.Medico)
                 .Include(t => t.Paciente)
                 .FirstOrDefaultAsync(m => m.Id == id);

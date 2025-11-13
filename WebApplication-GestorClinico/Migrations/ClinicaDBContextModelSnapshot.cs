@@ -30,6 +30,9 @@ namespace WebApplication_GestorClinico.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Apellido")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -38,6 +41,10 @@ namespace WebApplication_GestorClinico.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Dni")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -50,10 +57,6 @@ namespace WebApplication_GestorClinico.Migrations
 
                     b.Property<int?>("UsuarioId")
                         .HasColumnType("int");
-
-                    b.Property<string>("email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -73,6 +76,9 @@ namespace WebApplication_GestorClinico.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Barrio")
                         .IsRequired()
@@ -121,13 +127,66 @@ namespace WebApplication_GestorClinico.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Especialidad");
+                    b.ToTable("Especialidades");
+                });
+
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.Estado", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Estados");
+                });
+
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.EvolucionMedica", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Diagnostico")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("HistoriaClinicaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Observacion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Tratamiento")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HistoriaClinicaId");
+
+                    b.ToTable("EvolucionesMedicas");
                 });
 
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Guardia", b =>
@@ -152,6 +211,28 @@ namespace WebApplication_GestorClinico.Migrations
                     b.ToTable("Guardias");
                 });
 
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.HistoriaClinica", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PacienteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PacienteId")
+                        .IsUnique();
+
+                    b.ToTable("HistoriasClinicas");
+                });
+
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Medico", b =>
                 {
                     b.Property<int>("Id")
@@ -159,6 +240,9 @@ namespace WebApplication_GestorClinico.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Apellido")
                         .IsRequired()
@@ -168,6 +252,10 @@ namespace WebApplication_GestorClinico.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Dni")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -185,10 +273,6 @@ namespace WebApplication_GestorClinico.Migrations
                     b.Property<int?>("UsuarioId")
                         .HasColumnType("int");
 
-                    b.Property<string>("email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ClinicaId");
@@ -202,6 +286,35 @@ namespace WebApplication_GestorClinico.Migrations
                     b.ToTable("Medicos");
                 });
 
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.OrdenMedica", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Diagnostico")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("HistoriaClinicaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NombreEstudio")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HistoriaClinicaId");
+
+                    b.ToTable("OrdenesMedicas");
+                });
+
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Paciente", b =>
                 {
                     b.Property<int>("Id")
@@ -209,6 +322,9 @@ namespace WebApplication_GestorClinico.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Apellido")
                         .IsRequired()
@@ -218,6 +334,10 @@ namespace WebApplication_GestorClinico.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Dni")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -231,10 +351,6 @@ namespace WebApplication_GestorClinico.Migrations
 
                     b.Property<int?>("UsuarioId")
                         .HasColumnType("int");
-
-                    b.Property<string>("email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -255,8 +371,8 @@ namespace WebApplication_GestorClinico.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("AbandonoVoluntario")
-                        .HasColumnType("bit");
+                    b.Property<int>("EstadoId")
+                        .HasColumnType("int");
 
                     b.Property<int>("GuardiaId")
                         .HasColumnType("int");
@@ -272,11 +388,42 @@ namespace WebApplication_GestorClinico.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EstadoId");
+
                     b.HasIndex("GuardiaId");
 
                     b.HasIndex("PacienteId");
 
                     b.ToTable("PacientesEnEspera");
+                });
+
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.Receta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Dosis")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("HistoriaClinicaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Medicamento")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HistoriaClinicaId");
+
+                    b.ToTable("Recetas");
                 });
 
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Rol", b =>
@@ -296,6 +443,53 @@ namespace WebApplication_GestorClinico.Migrations
                     b.ToTable("Roles");
                 });
 
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.Turno", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("CentroMedicoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DuracionEnMinutos")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EspecialidadId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EstadoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaHoraInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MedicoId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PacienteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CentroMedicoId");
+
+                    b.HasIndex("EspecialidadId");
+
+                    b.HasIndex("EstadoId");
+
+                    b.HasIndex("MedicoId");
+
+                    b.HasIndex("PacienteId");
+
+                    b.ToTable("Turnos");
+                });
+
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Usuario", b =>
                 {
                     b.Property<int>("Id")
@@ -303,6 +497,9 @@ namespace WebApplication_GestorClinico.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Contrasenia")
                         .IsRequired()
@@ -350,6 +547,17 @@ namespace WebApplication_GestorClinico.Migrations
                     b.Navigation("Clinica");
                 });
 
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.EvolucionMedica", b =>
+                {
+                    b.HasOne("WebApplication_GestorClinico.Models.HistoriaClinica", "HistoriaClinica")
+                        .WithMany("EvolucionesMedicas")
+                        .HasForeignKey("HistoriaClinicaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HistoriaClinica");
+                });
+
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Guardia", b =>
                 {
                     b.HasOne("WebApplication_GestorClinico.Models.CentroMedico", "CentroMedico")
@@ -359,6 +567,17 @@ namespace WebApplication_GestorClinico.Migrations
                         .IsRequired();
 
                     b.Navigation("CentroMedico");
+                });
+
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.HistoriaClinica", b =>
+                {
+                    b.HasOne("WebApplication_GestorClinico.Models.Paciente", "Paciente")
+                        .WithOne("HistoriaClinica")
+                        .HasForeignKey("WebApplication_GestorClinico.Models.HistoriaClinica", "PacienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Paciente");
                 });
 
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Medico", b =>
@@ -386,6 +605,17 @@ namespace WebApplication_GestorClinico.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.OrdenMedica", b =>
+                {
+                    b.HasOne("WebApplication_GestorClinico.Models.HistoriaClinica", "HistoriaClinica")
+                        .WithMany("OrdenesMedicas")
+                        .HasForeignKey("HistoriaClinicaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HistoriaClinica");
+                });
+
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Paciente", b =>
                 {
                     b.HasOne("WebApplication_GestorClinico.Models.Clinica", "Clinica")
@@ -405,6 +635,12 @@ namespace WebApplication_GestorClinico.Migrations
 
             modelBuilder.Entity("WebApplication_GestorClinico.Models.PacienteEnEspera", b =>
                 {
+                    b.HasOne("WebApplication_GestorClinico.Models.Estado", "Estado")
+                        .WithMany()
+                        .HasForeignKey("EstadoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("WebApplication_GestorClinico.Models.Guardia", "Guardia")
                         .WithMany("PacientesEnEspera")
                         .HasForeignKey("GuardiaId")
@@ -417,7 +653,61 @@ namespace WebApplication_GestorClinico.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Estado");
+
                     b.Navigation("Guardia");
+
+                    b.Navigation("Paciente");
+                });
+
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.Receta", b =>
+                {
+                    b.HasOne("WebApplication_GestorClinico.Models.HistoriaClinica", "HistoriaClinica")
+                        .WithMany("Recetas")
+                        .HasForeignKey("HistoriaClinicaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HistoriaClinica");
+                });
+
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.Turno", b =>
+                {
+                    b.HasOne("WebApplication_GestorClinico.Models.CentroMedico", "CentroMedico")
+                        .WithMany("Turnos")
+                        .HasForeignKey("CentroMedicoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication_GestorClinico.Models.Especialidad", "Especialidad")
+                        .WithMany()
+                        .HasForeignKey("EspecialidadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication_GestorClinico.Models.Estado", "Estado")
+                        .WithMany()
+                        .HasForeignKey("EstadoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication_GestorClinico.Models.Medico", "Medico")
+                        .WithMany("Turnos")
+                        .HasForeignKey("MedicoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WebApplication_GestorClinico.Models.Paciente", "Paciente")
+                        .WithMany("Turnos")
+                        .HasForeignKey("PacienteId");
+
+                    b.Navigation("CentroMedico");
+
+                    b.Navigation("Especialidad");
+
+                    b.Navigation("Estado");
+
+                    b.Navigation("Medico");
 
                     b.Navigation("Paciente");
                 });
@@ -436,6 +726,8 @@ namespace WebApplication_GestorClinico.Migrations
             modelBuilder.Entity("WebApplication_GestorClinico.Models.CentroMedico", b =>
                 {
                     b.Navigation("Guardias");
+
+                    b.Navigation("Turnos");
                 });
 
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Clinica", b =>
@@ -459,9 +751,28 @@ namespace WebApplication_GestorClinico.Migrations
                     b.Navigation("PacientesEnEspera");
                 });
 
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.HistoriaClinica", b =>
+                {
+                    b.Navigation("EvolucionesMedicas");
+
+                    b.Navigation("OrdenesMedicas");
+
+                    b.Navigation("Recetas");
+                });
+
+            modelBuilder.Entity("WebApplication_GestorClinico.Models.Medico", b =>
+                {
+                    b.Navigation("Turnos");
+                });
+
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Paciente", b =>
                 {
+                    b.Navigation("HistoriaClinica")
+                        .IsRequired();
+
                     b.Navigation("RegistrosEnCola");
+
+                    b.Navigation("Turnos");
                 });
 
             modelBuilder.Entity("WebApplication_GestorClinico.Models.Rol", b =>

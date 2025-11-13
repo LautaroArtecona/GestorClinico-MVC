@@ -7,8 +7,8 @@
         public string Medicamento { get; set; }
         public string Dosis { get; set; }
 
-        // --- Clave Foránea (FK) ---
-        // (Le dice a qué historial pertenece esta receta)
+        // Clave Foránea
+        // Le dice a qué historial pertenece esta receta
         public int HistoriaClinicaId { get; set; }
         public virtual HistoriaClinica HistoriaClinica { get; set; }
     }

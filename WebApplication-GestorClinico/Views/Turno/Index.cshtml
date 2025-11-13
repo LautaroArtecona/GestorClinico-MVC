@@ -19,7 +19,10 @@
                 @Html.DisplayNameFor(model => model.DuracionEnMinutos)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Atendido)
+                @Html.DisplayNameFor(model => model.Estado)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Activo)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.CentroMedico)
@@ -46,7 +49,10 @@
                 @Html.DisplayFor(modelItem => item.DuracionEnMinutos)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Atendido)
+                @Html.DisplayFor(modelItem => item.Estado.Id)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Activo)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.CentroMedico.Id)

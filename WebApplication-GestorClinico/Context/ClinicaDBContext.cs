@@ -44,31 +44,73 @@ namespace WebApplication_GestorClinico.Context
         public DbSet<EvolucionMedica> EvolucionesMedicas { get; set; }
 
         public DbSet<Especialidad> Especialidades { get; set; }
+        public DbSet<Estado> Estados { get; set; }
 
         // Codigo para desambiguar que tome el id de cada clase
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            // CONFIGURACIÓN DE CLÍNICA (Desambiguación de listas, solucion al error del add-migration)
             modelBuilder.Entity<Clinica>()
                 .HasMany(clinica => clinica.Pacientes)
                 .WithOne(paciente => paciente.Clinica)
-                .HasForeignKey(paciente => paciente.ClinicaId) // Busca la FK en la clase base
+                .HasForeignKey(paciente => paciente.ClinicaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Clinica>()
                 .HasMany(clinica => clinica.Medicos)
                 .WithOne(medico => medico.Clinica)
-                .HasForeignKey(medico => medico.ClinicaId) // Busca la FK en la clase base
+                .HasForeignKey(medico => medico.ClinicaId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Clinica>()
                 .HasMany(clinica => clinica.Administrativos)
                 .WithOne(admin => admin.Clinica)
-                .HasForeignKey(admin => admin.ClinicaId) // Busca la FK en la clase base
+                .HasForeignKey(admin => admin.ClinicaId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // CONFIGURACIÓN DE TURNOS (Evitar error de ciclos, me daba error al momento del update-database)
+
+            modelBuilder.Entity<Turno>()
+                .HasOne(t => t.Medico)
+                .WithMany(m => m.Turnos)
+                .HasForeignKey(t => t.MedicoId)
+                .OnDelete(DeleteBehavior.Restrict); // No borrar turnos si se borra médico
+
+            modelBuilder.Entity<Turno>()
+                .HasOne(t => t.CentroMedico)
+                .WithMany(cm => cm.Turnos)
+                .HasForeignKey(t => t.CentroMedicoId)
+                .OnDelete(DeleteBehavior.Restrict); // No borrar turnos si se borra centro
+
+            modelBuilder.Entity<Turno>()
+                .HasOne(t => t.Especialidad)
+                .WithMany()
+                .HasForeignKey(t => t.EspecialidadId)
+                .OnDelete(DeleteBehavior.Restrict); // No borrar turnos si se borra especialidad
+
+            modelBuilder.Entity<Turno>()
+               .HasOne(t => t.Estado)
+               .WithMany()
+               .HasForeignKey(t => t.EstadoId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            // FILTROS GLOBALES DE BORRADO LÓGICO (Activo = true)
+            // EF aplicará "WHERE Activo = 1" automáticamente en todas las consultas
+
+            // Personas
+            modelBuilder.Entity<Paciente>().HasQueryFilter(p => p.Activo);
+            modelBuilder.Entity<Medico>().HasQueryFilter(m => m.Activo);
+            modelBuilder.Entity<Administrativo>().HasQueryFilter(a => a.Activo);
+
+            // Otras Entidades
+            modelBuilder.Entity<Usuario>().HasQueryFilter(u => u.Activo);
+            modelBuilder.Entity<Turno>().HasQueryFilter(t => t.Activo);
+            modelBuilder.Entity<CentroMedico>().HasQueryFilter(c => c.Activo);
+            modelBuilder.Entity<Especialidad>().HasQueryFilter(e => e.Activo);
+
         }
-        public DbSet<WebApplication_GestorClinico.Models.Especialidad> Especialidad { get; set; } = default!;
 
     }
 

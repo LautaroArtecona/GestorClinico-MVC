@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WebApplication_GestorClinico.Models
 {
-    public class CentroMedico
+    public class CentroMedico : IEliminable
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -23,16 +23,6 @@ namespace WebApplication_GestorClinico.Models
         // Un Centro Medico tiene MUCHOS Turnos
         public virtual ICollection<Turno> Turnos { get; set; }
 
-        /*
-        public string Nombre { get; set; }
-
-        public int Edad { get; set; }
-
-        [Display(Name = "Fecha inscripción")]
-        public DateTime FechaInscripto { get; set; }
-
-        [EnumDataType(typeof(TipoUsuario))]
-        public TipoUsuario TipoDeUsuario { get; set; }
-        */
+        public bool Activo { get; set; } = true;
     }
 }

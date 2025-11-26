@@ -5,10 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using WebApplication_GestorClinico.Models;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace WebApplication_GestorClinico.Context
 {
-    public class ClinicaDBContext : DbContext
+    public class ClinicaDBContext : IdentityDbContext
     {
         public ClinicaDBContext(DbContextOptions<ClinicaDBContext>options) : base(options)
         {
@@ -26,9 +27,6 @@ namespace WebApplication_GestorClinico.Context
         public DbSet<Administrativo> Administrativos { get; set; }
         public DbSet<Paciente> Pacientes { get; set; }
 
-        // Autenticacion y Roles
-        public DbSet<Usuario> Usuarios { get; set; }
-        public DbSet<Rol> Roles { get; set; }
 
         // Manejo de guardia
         public DbSet<Guardia> Guardias { get; set; }
@@ -76,25 +74,32 @@ namespace WebApplication_GestorClinico.Context
                 .HasOne(t => t.Medico)
                 .WithMany(m => m.Turnos)
                 .HasForeignKey(t => t.MedicoId)
-                .OnDelete(DeleteBehavior.Restrict); // No borrar turnos si se borra médico
+                .OnDelete(DeleteBehavior.Restrict); // No borra turnos si se borra médico
 
             modelBuilder.Entity<Turno>()
                 .HasOne(t => t.CentroMedico)
                 .WithMany(cm => cm.Turnos)
                 .HasForeignKey(t => t.CentroMedicoId)
-                .OnDelete(DeleteBehavior.Restrict); // No borrar turnos si se borra centro
+                .OnDelete(DeleteBehavior.Restrict); // No borra turnos si se borra centro
 
             modelBuilder.Entity<Turno>()
                 .HasOne(t => t.Especialidad)
                 .WithMany()
                 .HasForeignKey(t => t.EspecialidadId)
-                .OnDelete(DeleteBehavior.Restrict); // No borrar turnos si se borra especialidad
+                .OnDelete(DeleteBehavior.Restrict); // No borra turnos si se borra especialidad
 
             modelBuilder.Entity<Turno>()
                .HasOne(t => t.Estado)
                .WithMany()
                .HasForeignKey(t => t.EstadoId)
                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configuración para evitar ciclos en EvolucionMedica -> Medico
+            modelBuilder.Entity<EvolucionMedica>()
+                .HasOne(e => e.Medico)
+                .WithMany() 
+                .HasForeignKey(e => e.MedicoId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // FILTROS GLOBALES DE BORRADO LÓGICO (Activo = true)
             // EF aplicará "WHERE Activo = 1" automáticamente en todas las consultas
@@ -105,7 +110,6 @@ namespace WebApplication_GestorClinico.Context
             modelBuilder.Entity<Administrativo>().HasQueryFilter(a => a.Activo);
 
             // Otras Entidades
-            modelBuilder.Entity<Usuario>().HasQueryFilter(u => u.Activo);
             modelBuilder.Entity<Turno>().HasQueryFilter(t => t.Activo);
             modelBuilder.Entity<CentroMedico>().HasQueryFilter(c => c.Activo);
             modelBuilder.Entity<Especialidad>().HasQueryFilter(e => e.Activo);

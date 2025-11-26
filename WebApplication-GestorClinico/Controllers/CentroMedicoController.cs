@@ -48,7 +48,6 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: CentroMedico/Create
         public IActionResult Create()
         {
-            ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id");
             return View();
         }
 
@@ -57,8 +56,27 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Barrio,Direccion,Telefono,ClinicaId,Activo")] CentroMedico centroMedico)
+        public async Task<IActionResult> Create([Bind("Id,Barrio,Direccion,Telefono,ClinicaId")] CentroMedico centroMedico)
         {
+            // Le asignamos la primer Clinica que encuentra que es la clinica madre y si no la encuentra arroja error
+            var clinicaUnica = _context.Clinicas.FirstOrDefault();
+
+            if (clinicaUnica != null)
+            {
+                centroMedico.ClinicaId = clinicaUnica.Id;
+            }
+            else
+            {
+                ModelState.AddModelError("", "No existe ninguna Clínica registrada en el sistema.");
+                return View(centroMedico);
+            }
+
+            centroMedico.Activo = true;
+
+            // Para que el validador ignore los datos que no le mandamos en el formu y damos por hecho cual es su valor
+            ModelState.Remove("Clinica");
+            ModelState.Remove("ClinicaId");
+
             if (ModelState.IsValid)
             {
                 _context.Add(centroMedico);

@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using WebApplication_GestorClinico.Context;
 using WebApplication_GestorClinico.Models;
 
@@ -13,10 +14,14 @@ namespace WebApplication_GestorClinico.Controllers
     public class PacienteController : Controller
     {
         private readonly ClinicaDBContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public PacienteController(ClinicaDBContext context)
+        public PacienteController(ClinicaDBContext context, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         // GET: Paciente
@@ -49,8 +54,6 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Paciente/Create
         public IActionResult Create()
         {
-            ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id");
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id");
             return View();
         }
 
@@ -59,16 +62,76 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,ObraSocial,Dni,Nombre,Apellido,Email,UsuarioId,ClinicaId,Activo")] Paciente paciente)
+        public async Task<IActionResult> Create([Bind("Id,ObraSocial,Dni,Nombre,Apellido,Email,Activo")] Paciente paciente)
         {
+            // AUTOMATIZACIÓN DE DATOS
+            // Asignar Clínica única
+            var clinica = _context.Clinicas.FirstOrDefault();
+            if (clinica != null)
+            {
+                paciente.ClinicaId = clinica.Id;
+            }
+
+            // comienza en activo (borrado logico)
+            paciente.Activo = true;
+
+            // LIMPIEZA DE VALIDACIONES
+            ModelState.Remove("Clinica");
+            ModelState.Remove("ClinicaId");
+            ModelState.Remove("Activo");
+            ModelState.Remove("Usuario");
+            ModelState.Remove("UsuarioId");
+            ModelState.Remove("HistoriaClinica");
+
+
+            // Crea y asigna un usuario Identity al paciente
+
             if (ModelState.IsValid)
             {
-                _context.Add(paciente);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                if (!await _roleManager.RoleExistsAsync("Paciente"))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole("Paciente"));
+                }
+
+                var user = new IdentityUser
+                {
+                    UserName = paciente.Dni, // Usuario = DNI
+                    Email = paciente.Email,
+                    EmailConfirmed = true
+                };
+
+                // Contraseña = DNI
+                var result = await _userManager.CreateAsync(user, paciente.Dni);
+
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Paciente");
+
+                    paciente.UsuarioId = user.Id; // Vinculación
+
+                    _context.Add(paciente);
+                    await _context.SaveChangesAsync();
+
+                    // Crea la historia clinica una vez que se registra al paciente
+
+                    var nuevaHistoria = new HistoriaClinica
+                    {
+                        PacienteId = paciente.Id // Usamos el ID que acabamos de generar
+                    };
+                    _context.Add(nuevaHistoria);
+                    await _context.SaveChangesAsync(); 
+
+
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
             }
-            ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", paciente.ClinicaId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", paciente.UsuarioId);
             return View(paciente);
         }
 
@@ -86,7 +149,7 @@ namespace WebApplication_GestorClinico.Controllers
                 return NotFound();
             }
             ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", paciente.ClinicaId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", paciente.UsuarioId);
+            ViewData["UsuarioId"] = new SelectList(_context.Users, "Id", "Id", paciente.UsuarioId);
             return View(paciente);
         }
 
@@ -123,7 +186,7 @@ namespace WebApplication_GestorClinico.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", paciente.ClinicaId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", paciente.UsuarioId);
+            ViewData["UsuarioId"] = new SelectList(_context.Users, "Id", "Id", paciente.UsuarioId);
             return View(paciente);
         }
 

@@ -7,10 +7,10 @@
 
         // Relacion 1 a 1 con Especialidad
         public int EspecialidadId { get; set; }
-        public virtual Especialidad Especialidad { get; set; }
+        public virtual Especialidad? Especialidad { get; set; }
 
         // Un Medico tiene MUCHOS Turnos (su agenda)
-        public virtual ICollection<Turno> Turnos { get; set; }
+        public virtual ICollection<Turno>? Turnos { get; set; }
 
     }
 }

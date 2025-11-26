@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-//using System.Xml.Linq;
 
 namespace WebApplication_GestorClinico.Models
 {
@@ -18,10 +17,10 @@ namespace WebApplication_GestorClinico.Models
         public virtual Clinica Clinica { get; set; }
 
         // Coleccion de guardias
-        public virtual ICollection<Guardia> Guardias { get; set; }
+        public virtual ICollection<Guardia>? Guardias { get; set; }
 
         // Un Centro Medico tiene MUCHOS Turnos
-        public virtual ICollection<Turno> Turnos { get; set; }
+        public virtual ICollection<Turno>? Turnos { get; set; }
 
         public bool Activo { get; set; } = true;
     }

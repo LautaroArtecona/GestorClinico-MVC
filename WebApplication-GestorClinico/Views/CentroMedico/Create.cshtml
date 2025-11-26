@@ -1,52 +1,74 @@
 ﻿@model WebApplication_GestorClinico.Models.CentroMedico
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Nuevo Centro Médico";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<h1>Create</h1>
+<div class="container-fluid">
 
-<h4>CentroMedico</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Barrio" class="control-label"></label>
-                <input asp-for="Barrio" class="form-control" />
-                <span asp-validation-for="Barrio" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Direccion" class="control-label"></label>
-                <input asp-for="Direccion" class="form-control" />
-                <span asp-validation-for="Direccion" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Telefono" class="control-label"></label>
-                <input asp-for="Telefono" class="form-control" />
-                <span asp-validation-for="Telefono" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ClinicaId" class="control-label"></label>
-                <select asp-for="ClinicaId" class ="form-control" asp-items="ViewBag.ClinicaId"></select>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Activo" /> @Html.DisplayNameFor(model => model.Activo)
-                </label>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-dark fw-bold">Nuevo Centro Médico</h3>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Ver listado
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="m-0 font-weight-bold text-success">
+                <i class="bi bi-building"></i> Información de la Sede
+            </h5>
+        </div>
+
+        <div class="card-body p-4">
+            <form asp-action="Create">
+
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input asp-for="Direccion" class="form-control" placeholder="Calle y Altura" />
+                            <label asp-for="Direccion">Dirección</label>
+                            <span asp-validation-for="Direccion" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input asp-for="Barrio" class="form-control" placeholder="Barrio" />
+                            <label asp-for="Barrio">Barrio / Localidad</label>
+                            <span asp-validation-for="Barrio" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input asp-for="Telefono" class="form-control" placeholder="Teléfono" />
+                            <label asp-for="Telefono">Teléfono de Contacto</label>
+                            <span asp-validation-for="Telefono" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
+                        <i class="bi bi-plus-circle"></i> Crear Sede
+                    </button>
+                </div>
+
+            </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

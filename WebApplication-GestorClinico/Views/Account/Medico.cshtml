@@ -1,0 +1,78 @@
+﻿@model WebApplication_GestorClinico.Models.Vistas.Login
+@{
+    ViewData["Title"] = "Acceso Médicos";
+    Layout = null;
+}
+
+<head>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            /* Fondo violeta muy suave */
+            background-color: #f3e5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+
+        .medico-card {
+            background-color: #fff;
+            width: 400px;
+            padding: 40px;
+            border-radius: 8px;
+            /* Borde superior violeta fuerte */
+            border-top: 6px solid #8e44ad;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .text-violeta {
+            color: #8e44ad;
+        }
+
+        .btn-medico {
+            background-color: #8e44ad;
+            color: white;
+            font-weight: 600;
+        }
+
+            .btn-medico:hover {
+                background-color: #732d91;
+                color: white;
+            }
+    </style>
+</head>
+
+<body>
+    <div class="medico-card text-center">
+
+        <h3 class="text-violeta mb-3">Portal Médico</h3>
+        <p class="text-muted mb-4">Ingrese sus credenciales profesionales</p>
+
+        <form asp-action="Login" asp-route-rolEsperado="Medico" method="post">
+
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+            <div class="form-floating mb-3 text-start">
+                <input asp-for="Username" class="form-control" placeholder="Matrícula" />
+                <label for="Username">Matrícula / Usuario</label>
+                <span asp-validation-for="Username" class="text-danger small"></span>
+            </div>
+
+            <div class="form-floating mb-4 text-start">
+                <input asp-for="Password" class="form-control" type="password" placeholder="Contraseña" />
+                <label for="Password">Contraseña</label>
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-medico btn-lg">Ingresar</button>
+            </div>
+        </form>
+
+        <div class="mt-4">
+            <a href="@Url.Action("Index", "Home")" class="text-muted text-decoration-none small">Volver al inicio</a>
+        </div>
+    </div>
+</body>

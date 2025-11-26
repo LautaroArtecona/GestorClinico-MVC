@@ -1,0 +1,93 @@
+﻿@model WebApplication_GestorClinico.Models.Vistas.Login
+@{
+    ViewData["Title"] = "Portal Personal de Salud";
+    Layout = null; // Usamos null para diseñar la página entera sin el menú de arriba
+}
+
+<head>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: sans-serif;
+        }
+
+        .header-azul {
+            background-color: #ffff;
+            padding: 20px;
+            border-bottom: 3px solid #005a87;
+        }
+
+        .login-box {
+            background-color: #005a87; /* El Azul oscuro del ejemplo */
+            color: white;
+            padding: 30px;
+            max-width: 500px;
+            margin-top: 50px;
+        }
+
+        .btn-ingresar {
+            background-color: #0099cc; /* Celeste botón */
+            color: white;
+            font-weight: bold;
+            width: 100%;
+            border: none;
+        }
+
+            .btn-ingresar:hover {
+                background-color: #007ba3;
+            }
+    </style>
+</head>
+
+<body>
+    <div class="header-azul container-fluid">
+        <h3 style="color: #005a87;">Portal Personal de Salud</h3>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="login-box shadow">
+                    <h4>Ingreso al Portal</h4>
+                    <hr />
+
+                    <form asp-action="Login" asp-route-rolEsperado="Paciente" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-warning"></div>
+
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label">DNI</label>
+                            <div class="col-sm-8">
+                                <input asp-for="Username" class="form-control" placeholder="Ingrese su DNI" />
+                                <span asp-validation-for="Username" class="text-warning" style="font-size:0.8rem"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 row">
+                            <label class="col-sm-4 col-form-label">Contraseña</label>
+                            <div class="col-sm-8">
+                                <input asp-for="Password" class="form-control" type="password" />
+                                <span asp-validation-for="Password" class="text-warning"></span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-ingresar py-2">Ingresar</button>
+                        </div>
+                    </form>
+
+                    <div class="d-flex justify-content-between mt-3" style="font-size: 0.9rem;">
+                        <a href="#" class="text-white">Contactanos</a>
+                        <a href="#" class="text-white">Recuperar Contraseña</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 pt-5">
+                <h4>Registración</h4>
+                <p>Si es nuevo en el portal</p>
+                <button class="btn btn-outline-primary">Registrarse aquí</button>
+            </div>
+        </div>
+    </div>
+</body>

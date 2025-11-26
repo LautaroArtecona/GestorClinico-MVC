@@ -9,6 +9,8 @@
         public string Observacion { get; set; }
 
         // --- Clave Foránea (FK) ---
+        public int MedicoId { get; set; }
+        public virtual Medico Medico { get; set; }
         public int HistoriaClinicaId { get; set; }
         public virtual HistoriaClinica HistoriaClinica { get; set; }
     }

@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public string Nombre { get; set; }
 
-        public virtual ICollection<Medico> Medicos { get; set; }
+        public virtual ICollection<Medico>? Medicos { get; set; }
 
         public bool Activo { get; set; } = true;
     }

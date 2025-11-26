@@ -1,8 +1,86 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm sticky-top">
+    <div class="container">
+
+        <a class="navbar-brand fw-bold text-dark" href="#">
+            <span class="text-success display-6 fw-bold">+</span> Hospital Gestor
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="menuPrincipal">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link active" href="#">Hospital</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Pacientes</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Plan de Salud</a></li>
+            </ul>
+
+            <div class="d-flex align-items-center">
+                <a href="#" class="btn btn-outline-success me-3 fw-bold border-0">Quiero donar</a>
+
+                <div class="dropdown">
+                    <button class="btn btn-success dropdown-toggle fw-bold" type="button" id="dropdownLogin" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i> Iniciar Sesión
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownLogin">
+                        <li><h6 class="dropdown-header">Seleccione su perfil</h6></li>
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Paciente">Portal Pacientes</a></li>
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Medico">Portal Profesionales</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Administrativo">Administración</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="position-relative p-5 text-center text-lg-start text-white d-flex align-items-center"
+     style="background-image: url('https://img.freepik.com/free-photo/medical-team-standing-arms-crossed_107420-84776.jpg?w=1380'); background-size: cover; background-position: center; min-height: 500px;">
+
+    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
+
+    <div class="container position-relative z-1">
+        <div class="col-lg-6">
+            <span class="badge bg-success mb-2">Novedades</span>
+            <h1 class="display-3 fw-bold">Cuidar es mirar<br>al otro.</h1>
+            <p class="lead mb-4">Día Nacional de la Enfermería. Comprometidos con tu bienestar.</p>
+            <button class="btn btn-success btn-lg px-4 gap-3">Leer columna de opinión</button>
+        </div>
+    </div>
+</div>
+
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <label class="form-label fw-bold text-success">Buscar por Especialidad</label>
+                        <div class="input-group input-group-lg">
+                            <input type="text" class="form-control" placeholder="Ej: Cardiología, Pediatría..." aria-label="Buscar">
+                            <button class="btn btn-success" type="button">Buscar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="fw-bold mb-3">Bienvenidos a la medicina del futuro</h2>
+            <p class="text-muted fs-5">
+                Somos el Gestor Clínico, un hospital universitario de alta complejidad.
+                Transformamos la salud con innovación, excelencia y compromiso humano.
+            </p>
+        </div>
+    </div>
 </div>

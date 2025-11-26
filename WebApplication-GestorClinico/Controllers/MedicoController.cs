@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using WebApplication_GestorClinico.Context;
 using WebApplication_GestorClinico.Models;
 
@@ -13,10 +14,14 @@ namespace WebApplication_GestorClinico.Controllers
     public class MedicoController : Controller
     {
         private readonly ClinicaDBContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public MedicoController(ClinicaDBContext context)
+        public MedicoController(ClinicaDBContext context, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         // GET: Medico
@@ -50,9 +55,8 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Medico/Create
         public IActionResult Create()
         {
-            ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id");
-            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id");
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id");
+            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Nombre");
+
             return View();
         }
 
@@ -61,17 +65,68 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Matricula,EspecialidadId,Dni,Nombre,Apellido,Email,UsuarioId,ClinicaId,Activo")] Medico medico)
+        public async Task<IActionResult> Create([Bind("Id,Matricula,EspecialidadId,Dni,Nombre,Apellido,Email")] Medico medico)
         {
+            // Buscamos la única clínica del sistema
+            var clinica = _context.Clinicas.FirstOrDefault();
+            if (clinica != null)
+            {
+                medico.ClinicaId = clinica.Id;
+            }
+            medico.Activo = true;
+
+            ModelState.Remove("Clinica");
+            ModelState.Remove("ClinicaId");
+            ModelState.Remove("Activo");
+            ModelState.Remove("Usuario");
+            ModelState.Remove("UsuarioId");
+
+            // Creacion de Usuario
+
             if (ModelState.IsValid)
             {
-                _context.Add(medico);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // Verificar si el rol existe, sino lo crea
+                if (!await _roleManager.RoleExistsAsync("Medico"))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole("Medico"));
+                }
+
+                // Crear el Usuario de Identity
+                var user = new IdentityUser
+                {
+                    UserName = medico.Matricula, // Usuario = Matrícula
+                    Email = medico.Email,
+                    EmailConfirmed = true
+                };
+
+                // Creamos el usuario con contraseña = Matrícula
+                var result = await _userManager.CreateAsync(user, medico.Matricula);
+
+                if (result.Succeeded)
+                {
+                    // Asignar Rol
+                    await _userManager.AddToRoleAsync(user, "Medico");
+
+                    // Vincular el Médico con el Usuario recién creado
+                    medico.UsuarioId = user.Id; // Guardamos el GUID del usuario
+
+                    //  Guardar el Médico en la BD
+                    _context.Add(medico);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    // Si falla (ej. contraseña muy simple o usuario duplicado), mostramos el error
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
             }
-            ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", medico.ClinicaId);
-            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", medico.EspecialidadId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", medico.UsuarioId);
+
+            // Recargamos la lista de especialidades si falla
+            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Nombre", medico.EspecialidadId);
             return View(medico);
         }
 
@@ -90,7 +145,7 @@ namespace WebApplication_GestorClinico.Controllers
             }
             ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", medico.ClinicaId);
             ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", medico.EspecialidadId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", medico.UsuarioId);
+            ViewData["UsuarioId"] = new SelectList(_context.Users, "Id", "Id", medico.UsuarioId);
             return View(medico);
         }
 
@@ -128,7 +183,7 @@ namespace WebApplication_GestorClinico.Controllers
             }
             ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", medico.ClinicaId);
             ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", medico.EspecialidadId);
-            ViewData["UsuarioId"] = new SelectList(_context.Usuarios, "Id", "Id", medico.UsuarioId);
+            ViewData["UsuarioId"] = new SelectList(_context.Users, "Id", "Id", medico.UsuarioId);
             return View(medico);
         }
 

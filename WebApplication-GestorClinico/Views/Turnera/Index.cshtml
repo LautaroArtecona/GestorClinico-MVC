@@ -1,0 +1,227 @@
+﻿@model WebApplication_GestorClinico.Models.Paciente
+
+@{
+    ViewData["Title"] = "Turnera - Asignación";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <h3 class="mb-4 fw-bold"><i class="bi bi-calendar-check text-primary"></i> Asignación de Turnos</h3>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (ViewBag.Error != null || TempData["Error"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill"></i> @(ViewBag.Error ?? TempData["Error"])
+            @if (ViewBag.Error?.ToString().Contains("no encontrado") == true)
+            {
+                <a asp-controller="Pacientes" asp-action="Create" class="alert-link ms-2 fw-bold">Crear Paciente Nuevo</a>
+            }
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <form asp-action="BuscarPaciente" method="post" class="row g-3 align-items-center">
+                <div class="col-auto">
+                    <label class="col-form-label fw-bold text-secondary">Buscar Paciente:</label>
+                </div>
+                <div class="col-auto flex-grow-1" style="max-width: 300px;">
+                    <input type="text" name="dniBusqueda" class="form-control" placeholder="Ingrese DNI sin puntos" value="@ViewBag.DniIngresado" autofocus>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-dark px-4">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+                @if (Model != null)
+                {
+                    <div class="col-auto ms-auto">
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-lg"></i> Limpiar Búsqueda
+                        </a>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+
+    @if (Model != null)
+    {
+        <div class="row">
+            <div class="col-md-4">
+
+                <div class="card border-primary mb-4 shadow-sm">
+                    <div class="card-header bg-primary text-white py-2">
+                        <h5 class="m-0 fs-6"><i class="bi bi-person-check"></i> Paciente Seleccionado</h5>
+                    </div>
+                    <div class="card-body">
+                        <h4 class="fw-bold text-dark mb-3">@Model.Apellido, @Model.Nombre</h4>
+                        <div class="small text-muted">
+                            <p class="mb-1"><i class="bi bi-card-heading me-2"></i> <strong>DNI:</strong> @Model.Dni</p>
+                            <p class="mb-1"><i class="bi bi-hospital me-2"></i> <strong>Obra Social:</strong> @Model.ObraSocial</p>
+                            <p class="mb-0"><i class="bi bi-envelope me-2"></i> <strong>Email:</strong> @Model.Email</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-2 border-bottom">
+                        <h6 class="m-0 fw-bold text-secondary">
+                            <i class="bi bi-clock-history text-warning"></i> Turnos Programados
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        @{
+                            var turnosAsignados = ViewBag.TurnosAsignados as List<WebApplication_GestorClinico.Models.Turno>;
+                        }
+
+                        @if (turnosAsignados != null && turnosAsignados.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var turno in turnosAsignados)
+                                {
+                                    <li class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="fw-bold text-dark d-block">
+                                                    <i class="bi bi-calendar-event text-muted me-1"></i>
+                                                    @turno.FechaHoraInicio.ToString("dd/MM")
+                                                    <span class="text-primary">@turno.FechaHoraInicio.ToString("HH:mm") hs</span>
+                                                </span>
+                                                <span class="small text-muted d-block">@turno.Especialidad.Nombre</span>
+                                                <span class="badge bg-light text-dark border">Dr. @turno.Medico.Apellido</span>
+                                            </div>
+
+                                            <div class="text-end">
+                                                <form asp-action="CancelarTurno" method="post">
+                                                    <input type="hidden" name="turnoId" value="@turno.Id" />
+                                                    <input type="hidden" name="pacienteId" value="@Model.Id" />
+
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm border-0"
+                                                            title="Cancelar turno"
+                                                            onclick="return confirm('¿Seguro que desea liberar este turno?');">
+                                                        <i class="bi bi-x-circle-fill fs-5"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-calendar2-check fs-4 d-block mb-2 opacity-50"></i>
+                                <small>El paciente no tiene turnos a futuro.</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-md-8">
+
+                <div class="card shadow-sm mb-4 border-0 bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary mb-3">Buscar Disponibilidad</h5>
+
+                        <form asp-action="BuscarTurnos" method="post">
+                            <input type="hidden" name="pacienteId" value="@Model.Id" />
+
+                            <div class="row g-3">
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-bold text-secondary">Especialidad</label>
+                                    <select name="especialidadId" class="form-select" asp-items="ViewBag.Especialidades">
+                                        <option value="">-- Todas --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-bold text-secondary">Médico</label>
+                                    <select name="medicoId" class="form-select" asp-items="ViewBag.Medicos">
+                                        <option value="">-- Todos --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-funnel"></i> Filtrar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                @if (ViewBag.Turnos != null)
+                {
+                    var listaTurnos = ViewBag.Turnos as List<WebApplication_GestorClinico.Models.Turno>;
+
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                            <h5 class="m-0 fw-bold text-dark">Turnos Disponibles</h5>
+                            <span class="badge bg-secondary">@listaTurnos.Count encontrados</span>
+                        </div>
+                        <div class="card-body p-0 table-responsive" style="max-height: 500px;">
+                            @if (listaTurnos.Count > 0)
+                            {
+                                <table class="table table-hover mb-0 align-middle text-center">
+                                    <thead class="bg-light sticky-top">
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Hora</th>
+                                            <th>Profesional</th>
+                                            <th>Especialidad</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var turno in listaTurnos)
+                                        {
+                                            <tr>
+                                                <td class="fw-bold text-secondary">@turno.FechaHoraInicio.ToString("dd/MM/yyyy")</td>
+                                                <td class="text-primary fw-bold fs-5">@turno.FechaHoraInicio.ToString("HH:mm")</td>
+                                                <td class="text-start">
+                                                    <div class="fw-bold">@turno.Medico.Apellido, @turno.Medico.Nombre</div>
+                                                    <small class="text-muted">Mat: @turno.Medico.Matricula</small>
+                                                </td>
+                                                <td><span class="badge bg-info text-dark border">@turno.Especialidad.Nombre</span></td>
+                                                <td>
+                                                    <form asp-action="ReservarTurno" method="post">
+                                                        <input type="hidden" name="turnoId" value="@turno.Id" />
+                                                        <input type="hidden" name="pacienteId" value="@Model.Id" />
+
+                                                        <button type="submit" class="btn btn-success btn-sm fw-bold px-3 shadow-sm"
+                                                                onclick="return confirm('¿Confirmar turno con el Dr/a @turno.Medico.Apellido para el @turno.FechaHoraInicio?');">
+                                                            <i class="bi bi-check-lg"></i> RESERVAR
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <i class="bi bi-calendar-x fs-1 text-muted opacity-50"></i>
+                                    <p class="text-muted mt-3 mb-0">No hay turnos disponibles con esos filtros.</p>
+                                    <small class="text-muted">Intente cambiando el profesional o la especialidad.</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,82 @@
+﻿@model IEnumerable<WebApplication_GestorClinico.Models.PacienteEnEspera>
+
+@{
+    ViewData["Title"] = "Recepción de Guardia";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3><i class="bi bi-bandaid text-danger"></i> Sala de Espera - Guardia</h3>
+    <a asp-action="Ingreso" class="btn btn-danger">
+        <i class="bi bi-plus-lg"></i> Nuevo Ingreso
+    </a>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Mensaje"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Hora Llegada</th>
+                    <th>Paciente</th>
+                    <th>DNI</th>
+                    <th>Estado</th>
+                    <th>Tiempo de Espera</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    // Calculamos cuánto tiempo lleva esperando
+                    var tiempoEspera = DateTime.Now - item.HoraDeIngreso;
+                    string esperaFormato = $"{tiempoEspera.Hours}h {tiempoEspera.Minutes}m";
+
+                    <tr>
+                        <td class="ps-4 fw-bold text-muted">@item.HoraDeIngreso.ToString("HH:mm")</td>
+                        <td>
+                            <span class="fw-bold text-dark">@item.Paciente.Apellido, @item.Paciente.Nombre</span>
+                            <br />
+                            <small class="text-muted">@item.Paciente.ObraSocial</small>
+                        </td>
+                        <td>@item.Paciente.Dni</td>
+                        <td>
+                            <span class="badge bg-warning text-dark">@item.Estado.Nombre</span>
+                        </td>
+                        <td class="text-danger fw-bold">@esperaFormato</td>
+                        <td>
+                            <form asp-action="CancelarAtencion" method="post" style="display:inline;">
+
+                                <input type="hidden" name="idCola" value="@item.Id" />
+
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('¿Está seguro de que desea cancelar la atención de este paciente?');">
+                                    <i class="bi bi-x-circle"></i> Cancelar Atención
+                                </button>
+
+                            </form>
+                        </td>
+                    </tr>
+                }
+
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-emoji-smile fs-1"></i>
+                            <p class="mt-2">No hay pacientes en espera en este momento.</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,121 @@
+﻿@model WebApplication_GestorClinico.Models.Vistas.GeneracionAgenda
+
+@{
+    ViewData["Title"] = "Gestión de Agendas";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <h3 class="mb-4 fw-bold text-dark"><i class="bi bi-calendar-week text-primary"></i> Generador de Agendas</h3>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle"></i> @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="m-0 font-weight-bold text-primary">Configuración de Turnos</h5>
+        </div>
+        <div class="card-body p-4">
+
+            <form asp-action="Generar">
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-4 border-end">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Médico</label>
+                            <select asp-for="MedicoId" class="form-select" asp-items="ViewBag.MedicoId"></select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Centro Médico</label>
+                            <select asp-for="CentroMedicoId" class="form-select" asp-items="ViewBag.CentroMedicoId"></select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 border-end">
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold">Desde</label>
+                                <input asp-for="FechaDesde" class="form-control" type="date" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold">Hasta</label>
+                                <input asp-for="FechaHasta" class="form-control" type="date" />
+                            </div>
+                        </div>
+
+                        <label class="form-label fw-bold d-block">Días de Atención</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="checkbox" class="btn-check" name="DiasSeleccionados" value="1" id="diaLun" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="diaLun">Lu</label>
+
+                            <input type="checkbox" class="btn-check" name="DiasSeleccionados" value="2" id="diaMar" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="diaMar">Ma</label>
+
+                            <input type="checkbox" class="btn-check" name="DiasSeleccionados" value="3" id="diaMie" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="diaMie">Mi</label>
+
+                            <input type="checkbox" class="btn-check" name="DiasSeleccionados" value="4" id="diaJue" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="diaJue">Ju</label>
+
+                            <input type="checkbox" class="btn-check" name="DiasSeleccionados" value="5" id="diaVie" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="diaVie">Vi</label>
+
+                            <input type="checkbox" class="btn-check" name="DiasSeleccionados" value="6" id="diaSab" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="diaSab">Sa</label>
+                        </div>
+                        <small class="text-muted">Seleccione los días que aplican.</small>
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-bold">Hora Inicio</label>
+                                <input asp-for="HoraInicio" class="form-control" type="time" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-bold">Hora Fin</label>
+                                <input asp-for="HoraFin" class="form-control" type="time" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Duración del Turno</label>
+                            <select asp-for="DuracionMinutos" class="form-select">
+                                <option value="15">15 Minutos</option>
+                                <option value="20">20 Minutos</option>
+                                <option value="30" selected>30 Minutos</option>
+                                <option value="60">60 Minutos</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 shadow">
+                        <i class="bi bi-gear-wide-connected"></i> Generar Agenda
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>

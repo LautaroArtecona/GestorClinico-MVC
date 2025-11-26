@@ -1,0 +1,80 @@
+﻿:root {
+    --sidebar-width: 260px;
+    --color-principal: #343a40; /* Gris Oscuro */
+    --color-hover: #000000;
+    --color-accent: #dc3545; /* Rojo */
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Header */
+.top-bar {
+    background-color: white;
+    border-bottom: 4px solid var(--color-accent);
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Layout Principal */
+.main-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--color-principal);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+    overflow-y: auto;
+}
+
+    .sidebar a {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        padding: 12px 25px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.95rem;
+    }
+
+        .sidebar a:hover, .sidebar a.active {
+            background-color: var(--color-hover);
+            color: white;
+            border-left: 4px solid var(--color-accent);
+            padding-left: 21px;
+        }
+
+.sidebar-header {
+    padding: 20px 25px 10px 25px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.5);
+    font-weight: bold;
+}
+
+/* Contenido */
+.content {
+    flex: 1;
+    background-color: #eaepf2;
+    padding: 30px;
+    overflow-y: auto; /* Scroll en el contenido */
+}

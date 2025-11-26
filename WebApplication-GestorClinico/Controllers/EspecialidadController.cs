@@ -54,8 +54,10 @@ namespace WebApplication_GestorClinico.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Activo")] Especialidad especialidad)
+        public async Task<IActionResult> Create([Bind("Id,Nombre")] Especialidad especialidad)
         {
+            especialidad.Activo = true;
+
             if (ModelState.IsValid)
             {
                 _context.Add(especialidad);

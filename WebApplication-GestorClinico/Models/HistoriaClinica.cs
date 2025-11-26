@@ -13,13 +13,13 @@
         public virtual Paciente Paciente { get; set; }
 
         //El historial de órdenes médicas
-        public virtual ICollection<OrdenMedica> OrdenesMedicas { get; set; }
+        public virtual ICollection<OrdenMedica>? OrdenesMedicas { get; set; }
 
         //El historial de recetas
-        public virtual ICollection<Receta> Recetas { get; set; }
+        public virtual ICollection<Receta>? Recetas { get; set; }
 
         //El historial de evoluciones
-        public virtual ICollection<EvolucionMedica> EvolucionesMedicas { get; set; }
+        public virtual ICollection<EvolucionMedica>? EvolucionesMedicas { get; set; }
 
         // Interfaz de eliminacion logica
         public bool Activo { get; set; } = true;

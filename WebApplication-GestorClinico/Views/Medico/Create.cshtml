@@ -22,6 +22,25 @@
         </div>
 
         <div class="card-body p-4">
+            @if (ViewBag.IdReactivar != null)
+            {
+                <div class="alert alert-warning shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-exclamation-triangle-fill fs-4 me-2"></i>
+                            <strong>Atención:</strong> El médico <em>@ViewBag.NombreReactivar</em> ya existe en el historial.
+                        </div>
+
+                        <form asp-action="Reactivar" method="post">
+                            <input type="hidden" name="id" value="@ViewBag.IdReactivar" />
+                            <button type="submit" class="btn btn-warning fw-bold border border-dark">
+                                <i class="bi bi-arrow-counterclockwise"></i> REACTIVAR MÉDICO
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
             <form asp-action="Create">
 
                 <div asp-validation-summary="All" class="alert alert-danger d-none"></div>

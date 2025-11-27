@@ -1,4 +1,26 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using WebApplication_GestorClinico.Context
+@using WebApplication_GestorClinico.Models
+
+@inject UserManager<IdentityUser> UserManager
+@inject ClinicaDBContext Context
+
+@{
+    string nombreMostrar = User.Identity?.Name; // Por defecto muestra el Legajo
+
+    if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        var userId = UserManager.GetUserId(User);
+        var admin = Context.Administrativos.FirstOrDefault(a => a.UsuarioId == userId);
+
+        if (admin != null)
+        {
+            nombreMostrar = $"{admin.Apellido}, {admin.Nombre}";
+        }
+    }
+}
+
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -17,7 +39,7 @@
             <h5 class="m-0 fw-bold text-dark">SISTEMA DE GESTIÓN</h5>
         </div>
         <div>
-            <span class="text-muted me-2 small">Admin: <strong>@User.Identity?.Name</strong></span>
+            <span class="text-muted me-2 small">Admin: <strong>@nombreMostrar</strong></span>
             <a href="@Url.Action("Logout", "Account")" class="btn btn-sm btn-outline-dark">Salir</a>
         </div>
     </div>

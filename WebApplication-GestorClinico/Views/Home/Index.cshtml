@@ -1,86 +1,201 @@
 ﻿@{
-    ViewData["Title"] = "Inicio";
+    ViewData["Title"] = "Hospital Gestor - Inicio";
+    Layout = null; // <--- ESTO ES CLAVE: Elimina el marco por defecto
 }
 
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm sticky-top">
-    <div class="container">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
 
-        <a class="navbar-brand fw-bold text-dark" href="#">
-            <span class="text-success display-6 fw-bold">+</span> Hospital Gestor
-        </a>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+    <style>
+        /* Un poco de CSS para ajustar detalles que Bootstrap no cubre */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+        }
 
-        <div class="collapse navbar-collapse" id="menuPrincipal">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a class="nav-link active" href="#">Hospital</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Pacientes</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Plan de Salud</a></li>
-            </ul>
+        .hero-header {
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://img.freepik.com/free-photo/medical-banner-with-doctor-wearing-goggles_23-2149611193.jpg?w=1380');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 100px 0;
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+        }
 
-            <div class="d-flex align-items-center">
-                <a href="#" class="btn btn-outline-success me-3 fw-bold border-0">Quiero donar</a>
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background-color: #e8f5e9; /* Verde muy claro */
+            color: #198754; /* Verde Bootstrap */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
 
-                <div class="dropdown">
-                    <button class="btn btn-success dropdown-toggle fw-bold" type="button" id="dropdownLogin" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle"></i> Iniciar Sesión
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="dropdownLogin">
-                        <li><h6 class="dropdown-header">Seleccione su perfil</h6></li>
-                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Paciente">Portal Pacientes</a></li>
-                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Medico">Portal Profesionales</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" asp-controller="Account" asp-action="Administrativo">Administración</a></li>
-                    </ul>
-                </div>
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-dark d-flex align-items-center" href="#">
+                <i class="bi bi-hospital-fill text-success fs-2 me-2"></i>
+                <span class="d-flex flex-column lh-1 text-start">
+                    <span class="fs-5">Hospital</span>
+                    <small class="text-success text-uppercase" style="font-size:0.7rem; letter-spacing: 2px;">Gestor</small>
+                </span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link px-3 fw-bold" href="#">Institucional</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 fw-bold" href="#">Plan de Salud</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 fw-bold" href="#">Sedes</a></li>
+
+                    <li class="nav-item ms-lg-3">
+                        <div class="dropdown">
+                            <button class="btn btn-success fw-bold px-4 rounded-pill dropdown-toggle" type="button" id="loginDrop" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle me-1"></i> Ingresar
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="loginDrop">
+                                <li><h6 class="dropdown-header text-uppercase small">Seleccione Portal</h6></li>
+                                <li><a class="dropdown-item py-2" asp-controller="Account" asp-action="Paciente"><i class="bi bi-heart text-danger me-2"></i> Pacientes</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="Account" asp-action="Medico"><i class="bi bi-file-medical text-primary me-2"></i> Profesionales</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2 small text-muted" asp-controller="Account" asp-action="Administrativo"><i class="bi bi-gear me-2"></i> Administración</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<div class="position-relative p-5 text-center text-lg-start text-white d-flex align-items-center"
-     style="background-image: url('https://img.freepik.com/free-photo/medical-team-standing-arms-crossed_107420-84776.jpg?w=1380'); background-size: cover; background-position: center; min-height: 500px;">
-
-    <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
-
-    <div class="container position-relative z-1">
-        <div class="col-lg-6">
-            <span class="badge bg-success mb-2">Novedades</span>
-            <h1 class="display-3 fw-bold">Cuidar es mirar<br>al otro.</h1>
-            <p class="lead mb-4">Día Nacional de la Enfermería. Comprometidos con tu bienestar.</p>
-            <button class="btn btn-success btn-lg px-4 gap-3">Leer columna de opinión</button>
-        </div>
-    </div>
-</div>
-
-<div class="bg-light py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-10 col-lg-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-                        <label class="form-label fw-bold text-success">Buscar por Especialidad</label>
-                        <div class="input-group input-group-lg">
-                            <input type="text" class="form-control" placeholder="Ej: Cardiología, Pediatría..." aria-label="Buscar">
-                            <button class="btn btn-success" type="button">Buscar</button>
-                        </div>
+    <header class="hero-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-7">
+                    <span class="badge bg-success mb-3 px-3 py-2">Innovación en Salud</span>
+                    <h1 class="display-3 fw-bold mb-3">Cuidar es mirar<br>al otro.</h1>
+                    <p class="lead mb-4 opacity-75">
+                        Somos un hospital universitario de alta complejidad comprometido con tu bienestar y el de tu familia. Tecnología humana al servicio de la vida.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="btn btn-success btn-lg rounded-pill px-4">Sacar Turno Online</a>
+                        <a href="#" class="btn btn-outline-light btn-lg rounded-pill px-4">Ver Especialidades</a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </header>
 
-<div class="container py-5 text-center">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <h2 class="fw-bold mb-3">Bienvenidos a la medicina del futuro</h2>
-            <p class="text-muted fs-5">
-                Somos el Gestor Clínico, un hospital universitario de alta complejidad.
-                Transformamos la salud con innovación, excelencia y compromiso humano.
-            </p>
+    <section class="py-5 bg-light">
+        <div class="container mt-n5" style="position: relative; top: -50px;">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow hover-card p-4">
+                        <div class="feature-icon"><i class="bi bi-calendar-check"></i></div>
+                        <h4 class="fw-bold">Turnos Online</h4>
+                        <p class="text-muted">Gestioná tus citas médicas de forma rápida y sencilla desde nuestro portal.</p>
+                        <a asp-controller="Account" asp-action="Paciente" class="text-success fw-bold text-decoration-none">Ingresar al Portal <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow hover-card p-4">
+                        <div class="feature-icon"><i class="bi bi-clipboard-pulse"></i></div>
+                        <h4 class="fw-bold">Resultados</h4>
+                        <p class="text-muted">Accedé a tus estudios de laboratorio e imágenes sin moverte de tu casa.</p>
+                        <a href="#" class="text-success fw-bold text-decoration-none">Ver mis estudios <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow hover-card p-4">
+                        <div class="feature-icon"><i class="bi bi-hospital"></i></div>
+                        <h4 class="fw-bold">Guardia 24hs</h4>
+                        <p class="text-muted">Conocé el estado de la guardia en tiempo real y nuestros centros de atención.</p>
+                        <a href="#" class="text-success fw-bold text-decoration-none">Ver demora <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
+    </section>
+
+    <section class="py-5">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-4">¿Qué estás buscando?</h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="input-group input-group-lg shadow-sm">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0" placeholder="Buscar especialidad, médico o tratamiento...">
+                        <button class="btn btn-dark px-4">Buscar</button>
+                    </div>
+                    <div class="mt-3 text-muted small">
+                        Búsquedas frecuentes: <a href="#" class="text-secondary">Cardiología</a>, <a href="#" class="text-secondary">Pediatría</a>, <a href="#" class="text-secondary">Vacunación</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-5 mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">Hospital Gestor</h5>
+                    <p class="text-white-50">Excelencia médica y calidez humana. Comprometidos con la salud de nuestra comunidad desde hace más de 50 años.</p>
+                </div>
+                <div class="col-md-2">
+                    <h6 class="fw-bold text-uppercase mb-3">Accesos</h6>
+                    <ul class="list-unstyled text-white-50">
+                        <li><a href="#" class="text-decoration-none text-reset">Turnos</a></li>
+                        <li><a href="#" class="text-decoration-none text-reset">Portal Paciente</a></li>
+                        <li><a href="#" class="text-decoration-none text-reset">Profesionales</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold text-uppercase mb-3">Contacto</h6>
+                    <ul class="list-unstyled text-white-50">
+                        <li><i class="bi bi-geo-alt me-2"></i> Av. Principal 1234, CABA</li>
+                        <li><i class="bi bi-telephone me-2"></i> 0800-555-HOSP (4677)</li>
+                        <li><i class="bi bi-envelope me-2"></i> contacto@clinica.com</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="fw-bold text-uppercase mb-3">Urgencias</h6>
+                    <div class="d-grid">
+                        <button class="btn btn-danger btn-lg fw-bold"><i class="bi bi-telephone-fill"></i> LLAMAR 107</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 border-secondary">
+            <div class="text-center text-white-50 small">
+                &copy; 2025 WebApplication_GestorClinico. Todos los derechos reservados.
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

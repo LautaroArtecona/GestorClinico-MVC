@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using WebApplication_GestorClinico.Context;
@@ -10,9 +11,11 @@ namespace WebApplication_GestorClinico.Controllers
     public class AgendaController : Controller
     {
         private readonly ClinicaDBContext _context;
-        public AgendaController(ClinicaDBContext context)
+        private readonly UserManager<IdentityUser> _userManager;
+        public AgendaController(ClinicaDBContext context, UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Agendas/Gestionar
@@ -126,6 +129,88 @@ namespace WebApplication_GestorClinico.Controllers
             }
 
             return RedirectToAction(nameof(Gestionar));
+        }
+
+        // LISTADO DE FECHAS
+
+        public async Task<IActionResult> Cancelar()
+        {
+            // Identifica al médico logueado
+            var userId = _userManager.GetUserId(User);
+            var medico = await _context.Medicos.FirstOrDefaultAsync(m => m.UsuarioId == userId);
+
+            if (medico == null) return RedirectToAction("Index", "Home");
+
+            // Buscar turnos FUTUROS que NO estén cancelados
+            var turnos = await _context.Turnos
+                .Include(t => t.Estado)
+                .Include(t => t.Paciente) // Para saber si hay paciente asignado
+                .Where(t => t.MedicoId == medico.Id &&
+                            t.FechaHoraInicio > DateTime.Now &&
+                            t.Estado.Nombre != "Cancelado")
+                .OrderBy(t => t.FechaHoraInicio)
+                .ToListAsync();
+
+            // Agrupar por Fecha (Día)
+            var modelo = turnos
+                .GroupBy(t => t.FechaHoraInicio.Date)
+                .Select(grupo => new CancelarAgenda
+                {
+                    Fecha = grupo.Key,
+                    Turnos = grupo.ToList()
+                })
+                .ToList();
+
+            return View(modelo);
+        }
+
+
+        // CANCELAR DÍA COMPLETO
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarDia(DateTime fecha)
+        {
+            var userId = _userManager.GetUserId(User);
+            var medico = await _context.Medicos.FirstOrDefaultAsync(m => m.UsuarioId == userId);
+            var estadoCancelado = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Cancelado");
+
+            // Buscamos los turnos de ESE día para ESE médico
+            var turnosDelDia = await _context.Turnos
+                .Where(t => t.MedicoId == medico.Id &&
+                            t.FechaHoraInicio.Date == fecha.Date &&
+                            t.Estado.Nombre != "Cancelado")
+                .ToListAsync();
+
+            foreach (var turno in turnosDelDia)
+            {
+                turno.EstadoId = estadoCancelado.Id;
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Mensaje"] = $"Se han cancelado {turnosDelDia.Count} turnos del día {fecha.ToShortDateString()}.";
+
+            return RedirectToAction(nameof(Cancelar));
+        }
+
+
+        // CANCELAR TURNO INDIVIDUAL
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarTurno(int turnoId)
+        {
+            var turno = await _context.Turnos.FindAsync(turnoId);
+            var estadoCancelado = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Cancelado");
+
+            if (turno != null)
+            {
+                turno.EstadoId = estadoCancelado.Id;
+                await _context.SaveChangesAsync();
+                TempData["Mensaje"] = "Turno cancelado correctamente.";
+            }
+
+            return RedirectToAction(nameof(Cancelar));
         }
     }
 }

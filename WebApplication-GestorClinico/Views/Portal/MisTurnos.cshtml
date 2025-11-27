@@ -1,0 +1,130 @@
+﻿@{
+    ViewData["Title"] = "Mis Turnos";
+    Layout = "~/Views/Shared/_LayoutPaciente.cshtml";
+
+    var misTurnos = ViewBag.MisTurnos as List<WebApplication_GestorClinico.Models.Turno>;
+    var disponibles = ViewBag.TurnosDisponibles as List<WebApplication_GestorClinico.Models.Turno>;
+}
+
+<div class="container-fluid">
+
+    <h4 class="fw-bold text-dark mb-3"><i class="bi bi-calendar-check text-primary"></i> Mis Turnos Programados</h4>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (misTurnos != null && misTurnos.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+            @foreach (var turno in misTurnos)
+            {
+                <div class="col">
+                    <div class="card card-turno shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary fw-bold">
+                                @turno.FechaHoraInicio.ToString("dddd dd/MM")
+                            </h5>
+                            <h2 class="display-6 mb-3">@turno.FechaHoraInicio.ToString("HH:mm") hs</h2>
+
+                            <p class="mb-1"><strong>Especialidad:</strong> @turno.Especialidad.Nombre</p>
+                            <p class="mb-1"><strong>Profesional:</strong> @turno.Medico.Apellido, @turno.Medico.Nombre</p>
+                            <p class="mb-3"><strong>Lugar:</strong> @turno.CentroMedico?.Barrio</p>
+
+                            <div class="d-grid">
+                                <button class="btn btn-outline-danger btn-sm">Cancelar Turno</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-light border mb-5">
+            No tienes turnos próximos agendados. Utiliza el buscador de abajo para solicitar uno.
+        </div>
+    }
+
+    <hr class="my-5">
+
+    <div class="card shadow-sm border-0 bg-white">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="m-0"><i class="bi bi-search"></i> Solicitar Nuevo Turno</h5>
+        </div>
+        <div class="card-body p-4">
+
+            <form asp-action="MisTurnos" method="get" class="row g-3 mb-4 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Especialidad</label>
+                    <select name="especialidadId" class="form-select" asp-items="ViewBag.Especialidades">
+                        <option value="">-- Seleccionar --</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Profesional (Opcional)</label>
+                    <select name="medicoId" class="form-select" asp-items="ViewBag.Medicos">
+                        <option value="">-- Todos --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-dark w-100">Buscar</button>
+                </div>
+            </form>
+
+            @if (ViewBag.BusquedaRealizada)
+            {
+                @if (disponibles != null && disponibles.Any())
+                {
+                    <h6 class="text-muted mb-3">Resultados de búsqueda:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Hora</th>
+                                    <th>Especialidad</th>
+                                    <th>Profesional</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in disponibles)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@item.FechaHoraInicio.ToString("dd/MM/yyyy")</td>
+                                        <td class="text-primary fw-bold">@item.FechaHoraInicio.ToString("HH:mm")</td>
+                                        <td>@item.Especialidad.Nombre</td>
+                                        <td>@item.Medico.Apellido, @item.Medico.Nombre</td>
+                                        <td>
+                                            <form asp-action="ReservarTurnoPaciente" method="post">
+                                                <input type="hidden" name="turnoId" value="@item.Id" />
+                                                <button type="submit" class="btn btn-success btn-sm fw-bold px-3"
+                                                        onclick="return confirm('¿Confirmar reserva?');">
+                                                    RESERVAR
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-emoji-frown fs-3"></i>
+                        <p>No hay turnos disponibles con esos criterios.</p>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+</div>

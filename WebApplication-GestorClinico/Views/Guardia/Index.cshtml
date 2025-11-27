@@ -6,10 +6,18 @@
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3><i class="bi bi-bandaid text-danger"></i> Sala de Espera - Guardia</h3>
-    <a asp-action="Ingreso" class="btn btn-danger">
-        <i class="bi bi-plus-lg"></i> Nuevo Ingreso
-    </a>
+    <h3>
+        <i class="bi bi-bandaid text-danger"></i> Sala de Espera
+        <small class="text-muted fs-5">| @ViewBag.NombreGuardia</small>
+    </h3>
+
+    <div>
+        <a asp-action="Seleccionar" class="btn btn-outline-secondary me-2">Cambiar Sede</a>
+
+        <a asp-action="Ingreso" class="btn btn-danger">
+            <i class="bi bi-plus-lg"></i> Nuevo Ingreso
+        </a>
+    </div>
 </div>
 
 @if (TempData["Mensaje"] != null)

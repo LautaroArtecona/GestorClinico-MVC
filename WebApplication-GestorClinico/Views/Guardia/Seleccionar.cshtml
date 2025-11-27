@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Seleccionar Guardia";
+
+    // LÓGICA DINÁMICA DE LAYOUT
+    if (User.IsInRole("Medico"))
+    {
+        Layout = "~/Views/Shared/_LayoutMedico.cshtml"; // Diseño Violeta
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_LayoutAdmin.cshtml";  // Diseño Gris
+    }
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-dark text-white py-3 text-center">
+                    <h5 class="m-0"><i class="bi bi-geo-alt-fill"></i> Configuración de Trabajo</h5>
+                </div>
+                <div class="card-body p-5">
+                    <p class="text-center text-muted mb-4">
+                        Seleccione la <strong>Guardia / Centro Médico</strong> con la que desea operar en esta sesión.
+                    </p>
+
+                    <form asp-action="Seleccionar" method="post">
+                        <div class="form-floating mb-4">
+                            <select name="guardiaId" class="form-select" asp-items="ViewBag.Guardias" required>
+                                <option value="" disabled selected>-- Seleccione una Sede --</option>
+                            </select>
+                            <label>Sede de Guardia</label>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">CONTINUAR</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

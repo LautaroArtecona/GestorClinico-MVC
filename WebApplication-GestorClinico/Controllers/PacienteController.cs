@@ -64,6 +64,27 @@ namespace WebApplication_GestorClinico.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,ObraSocial,Dni,Nombre,Apellido,Email,Activo")] Paciente paciente)
         {
+
+            // BUSCAR POR DNI
+            var pacienteExistente = await _context.Pacientes
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.Dni == paciente.Dni);
+
+            if (pacienteExistente != null)
+            {
+                if (pacienteExistente.Activo)
+                {
+                    ModelState.AddModelError("Dni", "Ya existe un paciente activo con este DNI.");
+                }
+                else
+                {
+                    ViewBag.IdReactivar = pacienteExistente.Id;
+                    ViewBag.NombreReactivar = $"{pacienteExistente.Apellido}, {pacienteExistente.Nombre}";
+                    ModelState.AddModelError("Dni", "El paciente existe pero está inactivo.");
+                }
+                return View(paciente);
+            }
+
             // AUTOMATIZACIÓN DE DATOS
             // Asignar Clínica única
             var clinica = _context.Clinicas.FirstOrDefault();
@@ -133,6 +154,30 @@ namespace WebApplication_GestorClinico.Controllers
                 }
             }
             return View(paciente);
+        }
+
+        // REACTIVAR
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reactivar(int id)
+        {
+            var paciente = await _context.Pacientes.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id);
+            if (paciente == null) return NotFound();
+
+            // Reactivar
+            paciente.Activo = true;
+            _context.Pacientes.Update(paciente);
+
+            // Desbloquear Usuario
+            if (!string.IsNullOrEmpty(paciente.UsuarioId))
+            {
+                var user = await _userManager.FindByIdAsync(paciente.UsuarioId);
+                if (user != null) await _userManager.SetLockoutEndDateAsync(user, null);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Mensaje"] = "Paciente reactivado exitosamente.";
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Paciente/Edit/5
@@ -215,13 +260,50 @@ namespace WebApplication_GestorClinico.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            // Buscamos al paciente
             var paciente = await _context.Pacientes.FindAsync(id);
+
             if (paciente != null)
             {
-                _context.Pacientes.Remove(paciente);
+                // Buscamos el estado "Libre" para liberar los turnos tomados
+                var estadoLibre = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Libre");
+
+                if (estadoLibre != null)
+                {
+                    // Buscamos solo los turnos A FUTURO que tenga este paciente
+                    var turnosFuturos = await _context.Turnos
+                        .Where(t => t.PacienteId == id && t.FechaHoraInicio > DateTime.Now)
+                        .ToListAsync();
+
+                    foreach (var turno in turnosFuturos)
+                    {
+                        turno.PacienteId = null;       // Desvinculamos al paciente
+                        turno.EstadoId = estadoLibre.Id; // Ponemos el turno disponible para otro
+                    }
+                }
+
+                // BORRADO LÓGICO DEL PACIENTE
+                paciente.Activo = false;
+                _context.Pacientes.Update(paciente);
+
+                //  BLOQUEO DEL USUARIO DE IDENTITY 
+                if (!string.IsNullOrEmpty(paciente.UsuarioId))
+                {
+                    var usuarioIdentity = await _userManager.FindByIdAsync(paciente.UsuarioId);
+
+                    if (usuarioIdentity != null)
+                    {
+                        // Habilitamos el bloqueo
+                        await _userManager.SetLockoutEnabledAsync(usuarioIdentity, true);
+
+                        // Le ponemos fecha de fin de bloqueo maxima
+                        await _userManager.SetLockoutEndDateAsync(usuarioIdentity, DateTimeOffset.MaxValue);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

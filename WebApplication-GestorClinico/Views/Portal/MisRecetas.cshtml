@@ -1,0 +1,54 @@
+﻿@model IEnumerable<WebApplication_GestorClinico.Models.Receta>
+
+@{
+    ViewData["Title"] = "Mis Recetas";
+    Layout = "~/Views/Shared/_LayoutPaciente.cshtml";
+}
+
+<div class="container-fluid">
+    <h4 class="fw-bold text-dark mb-4"><i class="bi bi-capsule text-primary"></i> Mis Recetas Digitales</h4>
+
+    @if (Model.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            @foreach (var receta in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0" style="border-top: 4px solid #005a87 !important;">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="badge bg-light text-muted border">@receta.Fecha.ToString("dd/MM/yyyy")</span>
+                                <i class="bi bi-prescription2 fs-4 text-primary"></i>
+                            </div>
+
+                            <h5 class="card-title fw-bold text-dark mb-1">@receta.Medicamento</h5>
+                            <p class="text-primary fw-bold small mb-3">@receta.Dosis</p>
+
+                            <div class="d-flex align-items-center text-muted small mb-3">
+                                <i class="bi bi-box-seam me-2"></i> Cantidad recetada: <strong>@receta.Cantidad</strong>
+                            </div>
+
+                            <hr class="text-muted opacity-25">
+
+                            <div class="d-grid">
+                                <button class="btn btn-primary btn-sm fw-bold">
+                                    <i class="bi bi-cart-plus"></i> Ver detalle / Imprimir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5 mt-4">
+            <div class="bg-white d-inline-block p-4 rounded-circle shadow-sm mb-3">
+                <i class="bi bi-capsule-pill text-muted" style="font-size: 3rem;"></i>
+            </div>
+            <h5 class="text-muted">No hay recetas disponibles</h5>
+            <p class="text-secondary small">Los medicamentos que te receten en tus consultas aparecerán acá.</p>
+        </div>
+    }
+</div>

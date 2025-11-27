@@ -64,17 +64,6 @@ namespace WebApplication_GestorClinico.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Legajo,Dni,Nombre,Apellido,Email,Activo")] Administrativo administrativo)
         {
-            // Los numeros de legajo arrancan en 100000 y se asignan automaticamente
-            // busca y si no hay nadie le asigna 100000, si hay alguien le asigna el ultimo + 1
-            if (!_context.Administrativos.Any())
-            {
-                administrativo.Legajo = 100000; // El primero
-            }
-            else
-            {
-                int ultimoLegajo = _context.Administrativos.Max(a => a.Legajo);
-                administrativo.Legajo = ultimoLegajo + 1;
-            }
 
             // Asignar Clínica y Activo
             var clinica = _context.Clinicas.FirstOrDefault();
@@ -92,11 +81,47 @@ namespace WebApplication_GestorClinico.Controllers
             ModelState.Remove("UsuarioId");
             ModelState.Remove("Legajo");
 
+            // BUSCAR POR DNI
+            var adminExistente = await _context.Administrativos
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(a => a.Dni == administrativo.Dni);
+
+            if (adminExistente != null)
+            {
+                if (adminExistente.Activo)
+                {
+                    ModelState.AddModelError("Dni", "Ya existe un administrativo con este DNI.");
+                }
+                else
+                {
+                    ViewBag.IdReactivar = adminExistente.Id;
+                    ViewBag.NombreReactivar = $"{adminExistente.Apellido}, {adminExistente.Nombre}";
+                    ModelState.AddModelError("Dni", "El empleado existe (Legajo: " + adminExistente.Legajo + ") pero está inactivo.");
+                }
+                return View(administrativo);
+            }
+
+
+            
+
+            
+
 
             // Crea y asigna un usuario Identity al paciente
 
             if (ModelState.IsValid)
             {
+                // Calcular legajo
+                if (!_context.Administrativos.Any())
+                {
+                    administrativo.Legajo = 100000; // El primero
+                }
+                else
+                {
+                    int ultimoLegajo = _context.Administrativos.Max(a => a.Legajo);
+                    administrativo.Legajo = ultimoLegajo + 1;
+                }
+
                 if (!await _roleManager.RoleExistsAsync("Administrativo"))
                 {
                     await _roleManager.CreateAsync(new IdentityRole("Administrativo"));
@@ -131,6 +156,30 @@ namespace WebApplication_GestorClinico.Controllers
                 }
             }
             return View(administrativo);
+        }
+
+        // REACTIVAR
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reactivar(int id)
+        {
+            var admin = await _context.Administrativos.IgnoreQueryFilters().FirstOrDefaultAsync(a => a.Id == id);
+            if (admin == null) return NotFound();
+
+            // Reactivar
+            admin.Activo = true;
+            _context.Administrativos.Update(admin);
+
+            // Desbloquear Usuario
+            if (!string.IsNullOrEmpty(admin.UsuarioId))
+            {
+                var user = await _userManager.FindByIdAsync(admin.UsuarioId);
+                if (user != null) await _userManager.SetLockoutEndDateAsync(user, null);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Mensaje"] = "Administrativo reactivado exitosamente.";
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Administrativo/Edit/5
@@ -214,12 +263,27 @@ namespace WebApplication_GestorClinico.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var administrativo = await _context.Administrativos.FindAsync(id);
+
             if (administrativo != null)
             {
-                _context.Administrativos.Remove(administrativo);
+                // Borrado Lógico
+                administrativo.Activo = false;
+                _context.Administrativos.Update(administrativo);
+
+                // BLOQUEO DE USUARIO IDENTITY
+                if (!string.IsNullOrEmpty(administrativo.UsuarioId))
+                {
+                    var usuarioIdentity = await _userManager.FindByIdAsync(administrativo.UsuarioId);
+                    if (usuarioIdentity != null)
+                    {
+                        await _userManager.SetLockoutEnabledAsync(usuarioIdentity, true);
+                        await _userManager.SetLockoutEndDateAsync(usuarioIdentity, DateTimeOffset.MaxValue);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

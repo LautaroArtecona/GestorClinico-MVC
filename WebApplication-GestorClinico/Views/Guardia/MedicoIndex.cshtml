@@ -1,0 +1,81 @@
+﻿@model IEnumerable<WebApplication_GestorClinico.Models.PacienteEnEspera>
+
+@{
+    ViewData["Title"] = "Guardia Médica";
+    Layout = "~/Views/Shared/_LayoutMedico.cshtml";
+
+    // Separamos al primero de la lista
+    var proximoPaciente = Model.FirstOrDefault();
+    var restoPacientes = Model.Skip(1).ToList();
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-dark fw-bold"><i class="bi bi-hospital text-danger"></i> Guardia: @ViewBag.NombreGuardia</h3>
+        <a asp-action="Seleccionar" class="btn btn-outline-secondary btn-sm">Cambiar Sede</a>
+    </div>
+
+    @if (proximoPaciente != null)
+    {
+        <div class="card border-0 shadow mb-5 bg-white">
+            <div class="card-body p-5 text-center border-start border-5 border-danger">
+                <h5 class="text-uppercase text-muted mb-3 ls-2">Próximo Paciente en Espera</h5>
+
+                <h1 class="display-4 fw-bold text-dark mb-2">
+                    @proximoPaciente.Paciente.Apellido, @proximoPaciente.Paciente.Nombre
+                </h1>
+
+                <div class="mb-4">
+                    <span class="badge bg-light text-dark border fs-6 me-2">DNI: @proximoPaciente.Paciente.Dni</span>
+                    <span class="badge bg-info text-white fs-6">@proximoPaciente.Paciente.ObraSocial</span>
+                    <span class="text-muted ms-3"><i class="bi bi-clock"></i> Esperando desde: @proximoPaciente.HoraDeIngreso.ToString("HH:mm")</span>
+                </div>
+
+                <a asp-action="Atender" asp-route-idCola="@proximoPaciente.Id" class="btn btn-danger btn-lg px-5 py-3 fw-bold shadow-sm">
+                    <i class="bi bi-megaphone-fill"></i> LLAMAR PACIENTE
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success text-center p-5 mb-5">
+            <h3><i class="bi bi-check-circle"></i> Todo tranquilo</h3>
+            <p>No hay pacientes esperando en la guardia.</p>
+        </div>
+    }
+
+    @if (restoPacientes.Any())
+    {
+        <h5 class="text-muted mb-3">En Cola (@restoPacientes.Count)</h5>
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Hora</th>
+                            <th>Paciente</th>
+                            <th>DNI</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in restoPacientes)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold">@item.HoraDeIngreso.ToString("HH:mm")</td>
+                                <td>@item.Paciente.Apellido, @item.Paciente.Nombre</td>
+                                <td>@item.Paciente.Dni</td>
+                                <td>
+                                    <a asp-action="Atender" asp-route-idCola="@item.Id" class="btn btn-sm btn-outline-dark">
+                                        Llamar
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

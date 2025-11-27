@@ -1,147 +1,89 @@
-﻿@{
+﻿@model WebApplication_GestorClinico.Models.Vistas.PacienteDashboard
+
+@{
     ViewData["Title"] = "Portal Paciente";
-    Layout = null; // Usamos null para armar la estructura completa nosotros
+    Layout = "~/Views/Shared/_LayoutPaciente.cshtml";
 }
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8" />
-    <title>Portal Pacientes</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<div class="container-fluid">
 
-    <style>
-        :root {
-            --sidebar-width: 280px;
-            --color-principal: #005a87; /* EL CELESTE DEL HOSPITAL */
-            --color-hover: #004466;
-        }
+    <div class="card border-0 shadow-sm mb-4 overflow-hidden" style="background: linear-gradient(90deg, #005a87 0%, #00a8e8 100%); border-radius: 15px;">
+        <div class="row g-0">
+            <div class="col-md-8 p-5 d-flex flex-column justify-content-center text-white">
+                <h1 class="fw-bold display-5 mb-2">Hola, @Model.NombreCompleto</h1>
+                <p class="fs-5 opacity-75 mb-4">Tenés <strong>@Model.TurnosPendientes</strong> turnos programados próximamente.</p>
 
-        body {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* HEADER SUPERIOR */
-        .top-bar {
-            background-color: white;
-            border-bottom: 4px solid var(--color-principal);
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-        }
-
-        /* CONTENEDOR PRINCIPAL (Sidebar + Contenido) */
-        .main-container {
-            display: flex;
-            flex: 1;
-            overflow: hidden; /* Para que el scroll sea interno */
-        }
-
-        /* SIDEBAR (Barra lateral) */
-        .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--color-principal);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            padding-top: 20px;
-        }
-
-            .sidebar a {
-                color: rgba(255,255,255,0.8);
-                text-decoration: none;
-                padding: 15px 25px;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
-                transition: 0.3s;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
-                .sidebar a:hover, .sidebar a.active {
-                    background-color: var(--color-hover);
-                    color: white;
-                    border-left: 5px solid white;
-                    padding-left: 20px; /* Compensar el borde */
-                }
-
-        /* CONTENIDO DERECHO */
-        .content {
-            flex: 1;
-            background-color: #f8f9fa;
-            padding: 40px;
-            overflow-y: auto; /* Scroll solo en el contenido */
-        }
-
-        .banner-card {
-            background-image: url('https://img.freepik.com/free-photo/doctor-offering-medical-teleconsultation_23-2149329007.jpg');
-            background-size: cover;
-            background-position: center;
-            height: 300px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            position: relative;
-        }
-
-        .banner-overlay {
-            background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 70%);
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 10px;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="top-bar">
-        <div class="d-flex align-items-center">
-            <h4 class="m-0 text-primary fw-bold">HOSPITAL <span style="color:var(--color-principal)">GESTOR</span></h4>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-            <span>Hola, <strong>@User.Identity?.Name</strong></span>
-            <a href="@Url.Action("Logout", "Account")" class="btn btn-outline-danger btn-sm">Salir</a>
+                <div>
+                    <a asp-action="MisTurnos" class="btn btn-light text-primary fw-bold px-4 py-2 shadow-sm rounded-pill">
+                        <i class="bi bi-calendar-plus"></i> Sacar Turno Nuevo
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4 d-none d-md-block" style="background-image: url('https://img.freepik.com/free-photo/doctor-offering-medical-teleconsultation_23-2149329007.jpg'); background-size: cover; background-position: center; opacity: 0.8;">
+            </div>
         </div>
     </div>
 
-    <div class="main-container">
-        <div class="sidebar">
-            <h5 class="px-4 mb-3 opacity-75">Portal de Pacientes</h5>
-            <a href="#" class="active"><i class="bi bi-house-door"></i> Inicio</a>
-            <a href="#"><i class="bi bi-calendar-event"></i> Mis Turnos</a>
-            <a href="#"><i class="bi bi-file-earmark-medical"></i> Mis Estudios</a>
-            <a href="#"><i class="bi bi-prescription2"></i> Recetas</a>
-            <a href="#"><i class="bi bi-person-circle"></i> Mis Datos</a>
-        </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-primary fw-bold mb-3">
+                        <i class="bi bi-clock-history"></i> Próximo Turno
+                    </h5>
 
-        <div class="content">
-            <div class="banner-card shadow mb-4">
-                <div class="banner-overlay"></div>
-                <div class="p-5 text-white position-relative z-1">
-                    <h1 class="fw-bold">Gestión Online</h1>
-                    <p class="fs-5">Gestioná tus turnos y estudios sin moverte de casa.</p>
-                    <button class="btn btn-primary btn-lg mt-2">Sacar Turno Nuevo</button>
+                    @if (Model.ProximoTurno != null)
+                    {
+                        <div class="d-flex align-items-center bg-light p-3 rounded border">
+                            <div class="bg-white rounded-circle p-3 me-3 shadow-sm text-center" style="width: 70px; height: 70px;">
+                                <span class="d-block fw-bold text-danger">@Model.ProximoTurno.FechaHoraInicio.Day</span>
+                                <span class="small text-uppercase">@Model.ProximoTurno.FechaHoraInicio.ToString("MMM")</span>
+                            </div>
+                            <div>
+                                <h4 class="mb-0 fw-bold">@Model.ProximoTurno.FechaHoraInicio.ToString("HH:mm") hs</h4>
+                                <p class="mb-0 text-muted">@Model.ProximoTurno.Especialidad.Nombre</p>
+                                <small class="text-primary">Dr/a. @Model.ProximoTurno.Medico.Apellido</small>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-end">
+                            <a asp-action="MisTurnos" class="btn btn-sm btn-outline-primary">Ver detalle</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center text-muted">
+                            <div class="bg-light rounded-circle p-3 me-3">
+                                <i class="bi bi-calendar-check fs-4"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0">No tienes turnos programados.</p>
+                                <a asp-action="MisTurnos" class="small text-decoration-none fw-bold">Ver historial completo</a>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
+        </div>
 
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card shadow-sm border-0 p-3">
-                        <h5 class="text-primary">Próximo Turno</h5>
-                        <p class="text-muted">No tienes turnos programados.</p>
-                    </div>
+        <div class="col-md-6">
+            <div class="row g-3 h-100">
+                <div class="col-6">
+                    <a asp-action="MisEstudios" class="card shadow-sm border-0 text-decoration-none h-100 card-hover">
+                        <div class="card-body text-center p-4 d-flex flex-column justify-content-center">
+                            <i class="bi bi-file-earmark-medical fs-1 text-success mb-2 d-block"></i>
+                            <span class="text-dark fw-bold">Mis Estudios</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a asp-action="MisRecetas" class="card shadow-sm border-0 text-decoration-none h-100 card-hover">
+                        <div class="card-body text-center p-4 d-flex flex-column justify-content-center">
+                            <i class="bi bi-capsule fs-1 text-danger mb-2 d-block"></i>
+                            <span class="text-dark fw-bold">Recetas</span>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>

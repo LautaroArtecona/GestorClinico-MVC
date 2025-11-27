@@ -1,0 +1,127 @@
+﻿@model List<WebApplication_GestorClinico.Models.Vistas.CancelarAgenda>
+
+@{
+    ViewData["Title"] = "Cancelar Agenda";
+    Layout = "~/Views/Shared/_LayoutMedico.cshtml"; // Usamos el layout Violeta
+}
+
+<div class="container">
+    <h2 class="fw-bold text-dark mb-4">Gestión de Cancelaciones</h2>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <img src="https://cdn-icons-png.flaticon.com/512/7486/7486754.png" width="100" class="opacity-50 mb-3">
+            <h4 class="text-muted">No tiene agenda activa para cancelar.</h4>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted mb-4">Seleccione una fecha para ver los turnos o cancele el día completo.</p>
+
+        <div class="accordion" id="agendaAccordion">
+            @foreach (var dia in Model)
+            {
+                // Generamos un ID único para cada acordeón basado en la fecha
+                var idAcordeon = "dia-" + dia.Fecha.ToString("ddMMyyyy");
+
+                <div class="accordion-item shadow-sm border-0 mb-3 overflow-hidden">
+
+                    <h2 class="accordion-header position-relative" id="heading-@idAcordeon">
+                        <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#@idAcordeon">
+
+                            <div class="d-flex align-items-center w-100 me-5">
+                                <div class="text-center me-4 border-end pe-4">
+                                    <span class="d-block h4 fw-bold mb-0 text-primary">@dia.Fecha.Day</span>
+                                    <span class="text-uppercase small fw-bold">@dia.Fecha.ToString("MMM")</span>
+                                </div>
+
+                                <div>
+                                    <h5 class="m-0 fw-bold text-dark">@dia.Fecha.ToString("dddd")</h5>
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock"></i> @dia.HoraInicio - @dia.HoraFin hs &nbsp;|&nbsp;
+                                        <strong>@dia.CantidadTotal turnos</strong>
+                                        @if (dia.CantidadConPaciente > 0)
+                                        {
+                                            <span class="text-danger fw-bold">(@dia.CantidadConPaciente con pacientes)</span>
+                                        }
+                                    </small>
+                                </div>
+                            </div>
+                        </button>
+
+                        <div class="position-absolute top-50 end-0 translate-middle-y me-5" style="z-index: 5;">
+                            <form asp-action="EliminarDia" method="post">
+                                <input type="hidden" name="fecha" value="@dia.Fecha" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm fw-bold"
+                                        onclick="return confirm('⚠️ ¿Está seguro de cancelar TODOS los turnos del @dia.Fecha.ToShortDateString()? \n\nEsta acción no se puede deshacer.');">
+                                    <i class="bi bi-calendar-x"></i> Cancelar Día
+                                </button>
+                            </form>
+                        </div>
+                    </h2>
+
+                    <div id="@idAcordeon" class="accordion-collapse collapse" data-bs-parent="#agendaAccordion">
+                        <div class="accordion-body bg-light p-0">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Hora</th>
+                                        <th>Estado</th>
+                                        <th>Paciente</th>
+                                        <th class="text-end pe-4">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var turno in dia.Turnos)
+                                    {
+                                        <tr>
+                                            <td class="ps-4 fw-bold">@turno.FechaHoraInicio.ToString("HH:mm")</td>
+                                            <td>
+                                                @if (turno.PacienteId != null)
+                                                {
+                                                    <span class="badge bg-warning text-dark">Ocupado</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-success">Libre</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (turno.Paciente != null)
+                                                {
+                                                    <span>@turno.Paciente.Apellido, @turno.Paciente.Nombre</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted small">-</span>
+                                                }
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <form asp-action="EliminarTurno" method="post">
+                                                    <input type="hidden" name="turnoId" value="@turno.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none"
+                                                            onclick="return confirm('¿Cancelar solo este turno de las @turno.FechaHoraInicio.ToString("HH:mm")?');">
+                                                        <i class="bi bi-x-circle"></i> Cancelar
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

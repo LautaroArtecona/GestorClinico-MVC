@@ -1,0 +1,173 @@
+﻿@model WebApplication_GestorClinico.Models.Vistas.AtencionGuardia
+
+@{
+    ViewData["Title"] = "Atención Médica";
+    Layout = "~/Views/Shared/_LayoutMedico.cshtml"; // O Layout Medico
+}
+@{
+    ViewData["Title"] = "Atención Médica";
+    Layout = "~/Views/Shared/_LayoutMedico.cshtml";
+}
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+
+            <div class="card border-primary shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0"><i class="bi bi-person-vcard"></i> Paciente en Consulta</h5>
+                </div>
+                <div class="card-body bg-light">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">PACIENTE</small>
+                            <span class="fs-5 fw-bold">@Model.NombrePaciente</span>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">DNI</small>
+                            <span class="fs-5">@Model.Dni</span>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">OBRA SOCIAL</small>
+                            <span class="fs-5">@Model.ObraSocial</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form asp-action="FinalizarAtencion" method="post" id="formAtencion">
+                <input type="hidden" asp-for="IdCola" />
+                <input type="hidden" asp-for="PacienteId" />
+                <input type="hidden" asp-for="NombrePaciente" />
+                <input type="hidden" asp-for="Dni" />
+                <input type="hidden" asp-for="ObraSocial" />
+
+                <div class="card shadow border-0 mb-4">
+                    <div class="card-body p-4">
+                        <h4 class="text-primary mb-3 border-bottom pb-2">Evolución Clínica</h4>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Diagnóstico Principal</label>
+                                <input asp-for="Diagnostico" class="form-control form-control-lg" placeholder="Ej: Bronquitis Aguda" />
+                                <span asp-validation-for="Diagnostico" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Tratamiento / Indicaciones</label>
+                                <textarea asp-for="Tratamiento" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="Tratamiento" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Observaciones</label>
+                                <textarea asp-for="Observacion" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow border-0 mb-4">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="m-0 text-secondary"><i class="bi bi-clipboard-pulse"></i> Órdenes Médicas</h5>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarEstudio()">
+                                <i class="bi bi-plus-lg"></i> Agregar Estudio
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="40%">Estudio Solicitado</th>
+                                    <th>Diagnóstico / Justificación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaEstudios">
+                            </tbody>
+                        </table>
+                        <div id="emptyEstudios" class="text-center py-3 text-muted small">
+                            No se solicitaron estudios.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow border-0 mb-4">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="m-0 text-secondary"><i class="bi bi-capsule"></i> Recetario</h5>
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="agregarReceta()">
+                                <i class="bi bi-plus-lg"></i> Agregar Medicamento
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="40%">Medicamento (Droga)</th>
+                                    <th>Dosis / Presentación</th>
+                                    <th width="15%">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaRecetas">
+                            </tbody>
+                        </table>
+                        <div id="emptyRecetas" class="text-center py-3 text-muted small">
+                            No se recetaron medicamentos.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
+                    <a asp-action="MedicoIndex" class="btn btn-outline-secondary px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-success btn-lg px-5 shadow">
+                        <i class="bi bi-check2-circle"></i> FINALIZAR CONSULTA
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let indexEstudios = 0;
+    let indexRecetas = 0;
+
+    function agregarEstudio() {
+        document.getElementById('emptyEstudios').style.display = 'none';
+
+        const tabla = document.getElementById('tablaEstudios');
+        const row = tabla.insertRow();
+
+        // Usamos la sintaxis Ordenes[0].Propiedad para que MVC entienda que es una lista
+        row.innerHTML = `
+            <td>
+                <input name="Ordenes[${indexEstudios}].NombreEstudio" class="form-control form-control-sm" placeholder="Ej: Radiografía de Tórax" required />
+            </td>
+            <td>
+                <input name="Ordenes[${indexEstudios}].Diagnostico" class="form-control form-control-sm" placeholder="Ej: Control neumonía" />
+            </td>
+        `;
+        indexEstudios++;
+    }
+
+    function agregarReceta() {
+        document.getElementById('emptyRecetas').style.display = 'none';
+
+        const tabla = document.getElementById('tablaRecetas');
+        const row = tabla.insertRow();
+
+        row.innerHTML = `
+            <td>
+                <input name="Recetas[${indexRecetas}].Medicamento" class="form-control form-control-sm" placeholder="Ej: Ibuprofeno" required />
+            </td>
+            <td>
+                <input name="Recetas[${indexRecetas}].Dosis" class="form-control form-control-sm" placeholder="Ej: 600mg c/8hs" />
+            </td>
+            <td>
+                <input type="number" name="Recetas[${indexRecetas}].Cantidad" class="form-control form-control-sm" value="1" min="1" />
+            </td>
+        `;
+        indexRecetas++;
+    }
+</script>

@@ -33,6 +33,12 @@ namespace WebApplication_GestorClinico
             // Agrega los servicios para las p�ginas de Identity (Login, etc.)
             builder.Services.AddRazorPages();
 
+            // Agregamos la sesion
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30); // Tiempo de vida de la cookie
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -46,6 +52,8 @@ namespace WebApplication_GestorClinico
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseSession();
 
             // Activa el middleware que lee la cookie de login.
             app.UseAuthentication();

@@ -1,0 +1,90 @@
+﻿body {
+    font-family: 'Segoe UI', sans-serif;
+    /* Configuración de la imagen de fondo */
+    background-image: url('https://img.freepik.com/free-photo/blur-hospital_1203-7957.jpg?w=1380'); /* Imagen de hospital desenfocado */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* Fija el fondo al hacer scroll */
+    min-height: 100vh; /* Asegura que cubra toda la altura */
+    position: relative; /* Necesario para el overlay */
+}
+
+    /* Overlay oscuro para mejorar el contraste */
+    body::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 90, 135, 0.5); /* Azul institucional con 50% transparencia */
+        z-index: -1; /* Se coloca detrás del contenido */
+    }
+
+/* Tarjeta de Login */
+.login-card {
+    border: none;
+    border-radius: 15px;
+    /* Sombra más pronunciada para que "flote" sobre el fondo */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    overflow: hidden;
+    background-color: white; /* Asegura fondo blanco */
+}
+
+.login-header {
+    background: linear-gradient(135deg, #005a87 0%, #00a8e8 100%);
+    padding: 30px;
+    text-align: center;
+    color: white;
+}
+
+.login-body {
+    padding: 40px;
+}
+
+/* Campos de Formulario */
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: #005a87;
+    font-weight: 600;
+}
+
+.form-control:focus {
+    border-color: #00a8e8;
+    box-shadow: 0 0 0 0.25rem rgba(0, 168, 232, 0.15);
+}
+
+/* Botones */
+.btn-primary-custom {
+    background-color: #005a87;
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+    .btn-primary-custom:hover {
+        background-color: #004060;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 90, 135, 0.3);
+    }
+
+/* Links */
+.link-custom {
+    color: #005a87;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+    .link-custom:hover {
+        color: #004060;
+        text-decoration: underline;
+    }
+
+/* Ajuste para el footer en texto blanco */
+.text-muted.small p {
+    color: rgba(255, 255, 255, 0.8) !important;
+}

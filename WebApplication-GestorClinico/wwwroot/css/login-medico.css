@@ -1,0 +1,90 @@
+﻿body {
+    font-family: 'Segoe UI', sans-serif;
+    /* Misma imagen de fondo para consistencia (o puedes cambiarla) */
+    background-image: url('https://img.freepik.com/free-photo/blur-hospital_1203-7957.jpg?w=1380');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    position: relative;
+}
+
+    /* OVERLAY VIOLETA */
+    body::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* Violeta con transparencia */
+        background-color: rgba(142, 68, 173, 0.5);
+        z-index: -1;
+    }
+
+.login-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    overflow: hidden;
+    background-color: white;
+}
+
+/* GRADIENTE VIOLETA */
+.login-header {
+    background: linear-gradient(135deg, #8e44ad 0%, #a569bd 100%);
+    padding: 30px;
+    text-align: center;
+    color: white;
+}
+
+.login-body {
+    padding: 40px;
+}
+
+/* Colores de Foco en Inputs (Violeta) */
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: #8e44ad;
+    font-weight: 600;
+}
+
+.form-control:focus {
+    border-color: #a569bd;
+    box-shadow: 0 0 0 0.25rem rgba(142, 68, 173, 0.15);
+}
+
+/* Botón Violeta */
+.btn-primary-custom {
+    background-color: #8e44ad;
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+    .btn-primary-custom:hover {
+        background-color: #732d91;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
+    }
+
+/* Links */
+.link-custom {
+    color: #8e44ad;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+    .link-custom:hover {
+        color: #732d91;
+        text-decoration: underline;
+    }
+
+/* Footer Blanco */
+.text-white-50 p {
+    color: rgba(255, 255, 255, 0.8) !important;
+}

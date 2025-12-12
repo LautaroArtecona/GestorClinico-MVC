@@ -1,93 +1,77 @@
 ﻿@model WebApplication_GestorClinico.Models.Vistas.Login
 @{
-    ViewData["Title"] = "Portal Personal de Salud";
-    Layout = null; // Usamos null para diseñar la página entera sin el menú de arriba
+    ViewData["Title"] = "Ingreso Pacientes";
+    Layout = null;
 }
 
+<!DOCTYPE html>
+<html lang="es">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Hospital Gestor</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <style>
-        body {
-            background-color: #f4f6f9;
-            font-family: sans-serif;
-        }
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-        .header-azul {
-            background-color: #ffff;
-            padding: 20px;
-            border-bottom: 3px solid #005a87;
-        }
-
-        .login-box {
-            background-color: #005a87; /* El Azul oscuro del ejemplo */
-            color: white;
-            padding: 30px;
-            max-width: 500px;
-            margin-top: 50px;
-        }
-
-        .btn-ingresar {
-            background-color: #0099cc; /* Celeste botón */
-            color: white;
-            font-weight: bold;
-            width: 100%;
-            border: none;
-        }
-
-            .btn-ingresar:hover {
-                background-color: #007ba3;
-            }
-    </style>
+    <link rel="stylesheet" href="~/css/login.css" />
 </head>
-
 <body>
-    <div class="header-azul container-fluid">
-        <h3 style="color: #005a87;">Portal Personal de Salud</h3>
-    </div>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="login-box shadow">
-                    <h4>Ingreso al Portal</h4>
-                    <hr />
+    <partial name="_Header" />
 
-                    <form asp-action="Login" asp-route-rolEsperado="Paciente" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-warning"></div>
+    <div class="container d-flex align-items-center justify-content-center" style="min-height: 85vh;">
 
-                        <div class="mb-3 row">
-                            <label class="col-sm-4 col-form-label">DNI</label>
-                            <div class="col-sm-8">
-                                <input asp-for="Username" class="form-control" placeholder="Ingrese su DNI" />
-                                <span asp-validation-for="Username" class="text-warning" style="font-size:0.8rem"></span>
+        <div class="row justify-content-center w-100">
+            <div class="col-md-5">
+
+                <div class="login-card fade-in">
+                    <div class="login-header">
+                        <i class="bi bi-person-circle fs-1 mb-2"></i>
+                        <h4 class="mb-0 fw-bold">Portal del Paciente</h4>
+                        <small class="opacity-75">Ingrese sus datos para continuar</small>
+                    </div>
+
+                    <div class="login-body">
+                        <form asp-action="Login" asp-route-rolEsperado="Paciente" method="post">
+
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-4"></div>
+
+                            <div class="form-floating mb-3">
+                                <input asp-for="Username" class="form-control" placeholder="DNI" />
+                                <label asp-for="Username">DNI (Sin puntos)</label>
+                                <span asp-validation-for="Username" class="text-danger small"></span>
                             </div>
-                        </div>
 
-                        <div class="mb-3 row">
-                            <label class="col-sm-4 col-form-label">Contraseña</label>
-                            <div class="col-sm-8">
-                                <input asp-for="Password" class="form-control" type="password" />
-                                <span asp-validation-for="Password" class="text-warning"></span>
+                            <div class="form-floating mb-4">
+                                <input asp-for="Password" class="form-control" type="password" placeholder="Contraseña" />
+                                <label asp-for="Password">Contraseña</label>
+                                <span asp-validation-for="Password" class="text-danger small"></span>
                             </div>
-                        </div>
 
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-ingresar py-2">Ingresar</button>
-                        </div>
-                    </form>
+                            <div class="d-grid gap-2 mb-4">
+                                <button type="submit" class="btn btn-primary-custom text-white rounded-pill shadow-sm">
+                                    INGRESAR AL PORTAL
+                                </button>
+                            </div>
 
-                    <div class="d-flex justify-content-between mt-3" style="font-size: 0.9rem;">
-                        <a href="#" class="text-white">Contactanos</a>
-                        <a href="#" class="text-white">Recuperar Contraseña</a>
+                            <div class="text-center d-flex justify-content-between px-2">
+                                <a href="#" class="link-custom small">Olvidé mi clave</a>
+                                <a href="#" class="link-custom small fw-bold">Registrarme ahora</a>
+                            </div>
+
+                        </form>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-md-6 pt-5">
-                <h4>Registración</h4>
-                <p>Si es nuevo en el portal</p>
-                <button class="btn btn-outline-primary">Registrarse aquí</button>
+                <div class="text-center mt-4 text-white-50 small">
+                    <p>&copy; 2025 Hospital Gestor. Todos los derechos reservados.</p>
+                </div>
+
             </div>
         </div>
     </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+</html>

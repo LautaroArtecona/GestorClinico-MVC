@@ -1,6 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Hospital Gestor - Inicio";
-    Layout = null; // <--- ESTO ES CLAVE: Elimina el marco por defecto
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -13,83 +13,11 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-    <style>
-        /* Un poco de CSS para ajustar detalles que Bootstrap no cubre */
-        body {
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .hero-header {
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://img.freepik.com/free-photo/medical-banner-with-doctor-wearing-goggles_23-2149611193.jpg?w=1380');
-            background-size: cover;
-            background-position: center;
-            color: white;
-            padding: 100px 0;
-            min-height: 500px;
-            display: flex;
-            align-items: center;
-        }
-
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background-color: #e8f5e9; /* Verde muy claro */
-            color: #198754; /* Verde Bootstrap */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            font-size: 1.5rem;
-        }
-
-        .hover-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
-            transition: all 0.3s ease;
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/home.css" />
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-dark d-flex align-items-center" href="#">
-                <i class="bi bi-hospital-fill text-success fs-2 me-2"></i>
-                <span class="d-flex flex-column lh-1 text-start">
-                    <span class="fs-5">Hospital</span>
-                    <small class="text-success text-uppercase" style="font-size:0.7rem; letter-spacing: 2px;">Gestor</small>
-                </span>
-            </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link px-3 fw-bold" href="#">Institucional</a></li>
-                    <li class="nav-item"><a class="nav-link px-3 fw-bold" href="#">Plan de Salud</a></li>
-                    <li class="nav-item"><a class="nav-link px-3 fw-bold" href="#">Sedes</a></li>
-
-                    <li class="nav-item ms-lg-3">
-                        <div class="dropdown">
-                            <button class="btn btn-success fw-bold px-4 rounded-pill dropdown-toggle" type="button" id="loginDrop" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle me-1"></i> Ingresar
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="loginDrop">
-                                <li><h6 class="dropdown-header text-uppercase small">Seleccione Portal</h6></li>
-                                <li><a class="dropdown-item py-2" asp-controller="Account" asp-action="Paciente"><i class="bi bi-heart text-danger me-2"></i> Pacientes</a></li>
-                                <li><a class="dropdown-item py-2" asp-controller="Account" asp-action="Medico"><i class="bi bi-file-medical text-primary me-2"></i> Profesionales</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item py-2 small text-muted" asp-controller="Account" asp-action="Administrativo"><i class="bi bi-gear me-2"></i> Administración</a></li>
-                            </ul>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <partial name="_Header" />
 
     <header class="hero-header">
         <div class="container">

@@ -1,68 +1,76 @@
 ﻿@model WebApplication_GestorClinico.Models.Vistas.Login
 @{
     ViewData["Title"] = "Acceso Administrativo";
-    Layout = null; // Sin menú principal
+    Layout = null;
 }
+
+<!DOCTYPE html>
+<html lang="es">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Hospital Gestor</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <style>
-        body {
-            background-color: #343a40; /* Gris oscuro de fondo */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        .admin-card {
-            background-color: #fff;
-            width: 400px;
-            padding: 40px;
-            border-radius: 5px;
-            border-top: 5px solid #dc3545; /* Línea roja superior (detalle corporativo) */
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-        .btn-admin {
-            background-color: #343a40;
-            color: white;
-            transition: 0.3s;
-        }
-        .btn-admin:hover {
-            background-color: #000;
-            color: white;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" href="~/css/login-admin.css" />
 </head>
-
 <body>
-    <div class="admin-card">
-        <div class="text-center mb-4">
-            <h3 class="text-dark">Administración</h3>
-            <p class="text-muted">Gestión Interna de Clínica</p>
-        </div>
 
-        <form asp-action="Login" asp-route-rolEsperado="Administrativo" method="post">
+    <partial name="_Header" />
 
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger p-2 text-center" style="font-size: 0.9rem"></div>
+    <div class="container d-flex align-items-center justify-content-center" style="min-height: 85vh;">
+        <div class="row justify-content-center w-100">
+            <div class="col-md-4">
+                <div class="login-card fade-in">
+                    <div class="login-header">
+                        <i class="bi bi-shield-lock-fill fs-1 mb-2"></i>
+                        <h5 class="mb-0 fw-bold text-uppercase">Administración</h5>
+                        <small class="opacity-75">Gestión Interna de Clínica</small>
+                    </div>
 
-            <div class="form-floating mb-3">
-                <input asp-for="Username" class="form-control" placeholder="Legajo" />
-                <label for="Username">Legajo / Usuario</label>
-                <span asp-validation-for="Username" class="text-danger small"></span>
+                    <div class="login-body">
+                        <form asp-action="Login" asp-route-rolEsperado="Administrativo" method="post">
+
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-4"></div>
+
+                            <div class="form-floating mb-3">
+                                <input asp-for="Username" class="form-control" placeholder="Usuario" />
+                                <label asp-for="Username">Legajo / Usuario</label>
+                                <span asp-validation-for="Username" class="text-danger small"></span>
+                            </div>
+
+                            <div class="form-floating mb-4">
+                                <input asp-for="Password" class="form-control" type="password" placeholder="Contraseña" />
+                                <label asp-for="Password">Contraseña</label>
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+
+                            <div class="d-grid gap-2 mb-4">
+                                <button type="submit" class="btn btn-primary-custom text-white shadow-sm">
+                                    Acceder al Sistema
+                                </button>
+                            </div>
+
+                            <div class="text-center">
+                                <a href="@Url.Action("Index", "Home")" class="link-custom">
+                                    &larr; Volver al inicio
+                                </a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4 text-white-50 small">
+                    <p>&copy; 2025 Hospital Gestor. Acceso Restringido.</p>
+                </div>
+
             </div>
-
-            <div class="form-floating mb-4">
-                <input asp-for="Password" class="form-control" type="password" placeholder="Contraseña" />
-                <label for="Password">Contraseña</label>
-                <span asp-validation-for="Password" class="text-danger small"></span>
-            </div>
-
-            <div class="d-grid">
-                <button type="submit" class="btn btn-admin btn-lg">Acceder al Sistema</button>
-            </div>
-        </form>
-
-        <div class="mt-4 text-center">
-            <a href="@Url.Action("Index", "Home")" class="text-muted text-decoration-none small">← Volver al inicio</a>
         </div>
     </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+</html>

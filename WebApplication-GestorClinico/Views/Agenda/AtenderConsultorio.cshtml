@@ -1,0 +1,121 @@
+﻿@model List<WebApplication_GestorClinico.Models.Turno>
+
+@{
+    ViewData["Title"] = "Consultorio del Día";
+    Layout = "~/Views/Shared/_LayoutMedico.cshtml";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark m-0"><i class="bi bi-clipboard-pulse"></i> Mi Consultorio</h3>
+            <p class="text-muted m-0">Pacientes agendados para hoy: @DateTime.Today.ToString("dddd dd 'de' MMMM")</p>
+        </div>
+        <div class="bg-light px-4 py-2 rounded border">
+            <span class="fw-bold text-primary h4 m-0">@Model.Count(t => t.Estado.Nombre == "En Espera")</span>
+            <span class="small text-muted text-uppercase fw-bold ms-2">En Sala de Espera</span>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th class="ps-4">Horario</th>
+                        <th>Paciente</th>
+                        <th>Obra Social</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-4">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var turno in Model)
+                    {
+                        // Estilo visual según estado
+                        string rowClass = "";
+                        if (turno.Estado.Nombre == "En Espera") { rowClass = "table-success"; } // Resaltar los que están esperando
+
+                        <tr class="@rowClass">
+                            <td class="ps-4 fw-bold">@turno.FechaHoraInicio.ToString("HH:mm")</td>
+                            <td>
+                                @if (turno.Paciente != null)
+                                {
+                                    <span class="fw-bold">@turno.Paciente.Apellido, @turno.Paciente.Nombre</span>
+                                    <br>
+
+                                    <small class="text-muted">DNI: @turno.Paciente.Dni</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Sin paciente</span>
+                                }
+                            </td>
+                            <td>@(turno.Paciente?.ObraSocial ?? "-")</td>
+                            <td>
+                                @if (turno.Estado.Nombre == "Asignado")
+                                {
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-house"></i> Ausente / En camino</span>
+                                }
+                                else if (turno.Estado.Nombre == "En Espera")
+                                {
+                                    <span class="badge bg-success animate-pulse"><i class="bi bi-person-check"></i> En Espera</span>
+                                }
+                                else if (turno.Estado.Nombre == "Atendido")
+                                {
+                                    <span class="badge bg-secondary">Atendido</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                @if (turno.Estado.Nombre == "En Espera")
+                                {
+                                    <a href="@Url.Action("Atender", "Agenda", new { turnoId = turno.Id })" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                                        <i class="bi bi-megaphone"></i> LLAMAR
+                                    </a>
+                                }
+                                else if (turno.Estado.Nombre == "Asignado")
+                                {
+                                    <button class="btn btn-outline-secondary btn-sm" disabled>
+                                        Esperando llegada...
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-light text-center py-5 border">
+            <img src="https://cdn-icons-png.flaticon.com/512/2790/2790434.png" width="80" class="opacity-25 mb-3">
+            <h4 class="text-muted">Agenda libre</h4>
+            <p>No hay turnos programados para el día de hoy.</p>
+        </div>
+    }
+</div>
+
+<style>
+    @@keyframes pulse-shadow {
+        0%
+
+    {
+        box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(25, 135, 84, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
+    }
+
+    }
+
+    .animate-pulse {
+        animation: pulse-shadow 2s infinite;
+    }
+</style>

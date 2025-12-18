@@ -6,6 +6,7 @@ namespace WebApplication_GestorClinico.Models.Vistas
     {
         // Datos para identificar el proceso
         public int IdCola { get; set; } // El ID del registro en PacientesEnEspera
+        public int? TurnoId { get; set; }
         public int PacienteId { get; set; }
 
         // Datos Informativos (Solo lectura para mostrar al médico)

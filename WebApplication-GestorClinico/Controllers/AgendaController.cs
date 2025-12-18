@@ -8,6 +8,7 @@ using WebApplication_GestorClinico.Models.Vistas;
 
 namespace WebApplication_GestorClinico.Controllers
 {
+    //[Authorize(Roles = "Medico")]
     public class AgendaController : Controller
     {
         private readonly ClinicaDBContext _context;
@@ -211,6 +212,151 @@ namespace WebApplication_GestorClinico.Controllers
             }
 
             return RedirectToAction(nameof(Cancelar));
+        }
+
+
+        // GET: Atender Consultorio (Lista del día)
+        public async Task<IActionResult> AtenderConsultorio()
+        {
+            var userId = _userManager.GetUserId(User);
+            var medico = await _context.Medicos.FirstOrDefaultAsync(m => m.UsuarioId == userId);
+
+            if (medico == null) return RedirectToAction("Index", "Home");
+
+            // Buscamos turnos de HOY para ESTE médico
+            var turnosHoy = await _context.Turnos
+                .Include(t => t.Paciente)
+                .Include(t => t.Estado)
+                .Include(t => t.Especialidad)
+                .Where(t => t.MedicoId == medico.Id &&
+                            t.Activo == true &&
+                            t.FechaHoraInicio.Date == DateTime.Today)
+                .OrderBy(t => t.FechaHoraInicio)
+                .ToListAsync();
+
+            return View(turnosHoy);
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Atender(int turnoId)
+        {
+            var turno = await _context.Turnos
+                .Include(t => t.Paciente)
+                .Include(t => t.Medico)
+                .Include(t => t.Especialidad) // Agregamos esto por si acaso
+                .FirstOrDefaultAsync(t => t.Id == turnoId);
+
+            if (turno == null) return RedirectToAction(nameof(AtenderConsultorio));
+
+            // Reutilizamos el ViewModel de atención
+            var model = new WebApplication_GestorClinico.Models.Vistas.AtencionGuardia
+            {
+                TurnoId = turno.Id,
+                IdCola = 0,
+                PacienteId = turno.PacienteId ?? 0,
+                NombrePaciente = $"{turno.Paciente.Apellido}, {turno.Paciente.Nombre}",
+                Dni = turno.Paciente.Dni,
+                ObraSocial = turno.Paciente.ObraSocial
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FinalizarAtencion(WebApplication_GestorClinico.Models.Vistas.AtencionGuardia model)
+        {
+            // Limpieza de validaciones
+            ModelState.Remove("Ordenes");
+            ModelState.Remove("Recetas");
+
+            if (!ModelState.IsValid) return View("Atender", model);
+
+            // Buscar Turno y Historia Clínica
+            var turno = await _context.Turnos.FindAsync(model.TurnoId);
+
+            var historiaClinica = await _context.HistoriasClinicas
+                .FirstOrDefaultAsync(h => h.PacienteId == model.PacienteId);
+
+            // Si no tiene historia, la creamos
+            if (historiaClinica == null)
+            {
+                // CORREGIDO: Quitamos FechaCreacion para evitar el error
+                historiaClinica = new HistoriaClinica
+                {
+                    PacienteId = model.PacienteId
+                };
+
+                _context.Add(historiaClinica);
+                await _context.SaveChangesAsync();
+            }
+
+            // Guardar Evolución
+            var evolucion = new EvolucionMedica
+            {
+                HistoriaClinicaId = historiaClinica.Id,
+                MedicoId = turno.MedicoId,
+                Fecha = DateTime.Now,
+                Diagnostico = model.Diagnostico,
+                Tratamiento = model.Tratamiento,
+                Observacion = model.Observacion 
+            };
+            _context.Add(evolucion);
+
+            // Guardar Recetas y Ordenes
+            // GUARDAR ÓRDENES MÉDICAS 
+            if (model.Ordenes != null && model.Ordenes.Any())
+            {
+                foreach (var ordenDto in model.Ordenes)
+                {
+                    // Se guardo solo si hay algo escrito
+                    if (!string.IsNullOrEmpty(ordenDto.NombreEstudio))
+                    {
+                        var orden = new OrdenMedica
+                        {
+                            Fecha = DateTime.Now,
+                            NombreEstudio = ordenDto.NombreEstudio,
+                            Diagnostico = ordenDto.Diagnostico ?? model.Diagnostico, // Si no se pone nada, usa el general
+                            HistoriaClinicaId = historiaClinica.Id
+                        };
+                        _context.OrdenesMedicas.Add(orden);
+                    }
+                }
+            }
+
+            //  GUARDAR RECETAS
+            if (model.Recetas != null && model.Recetas.Any())
+            {
+                foreach (var recetaDto in model.Recetas)
+                {
+                    if (!string.IsNullOrEmpty(recetaDto.Medicamento))
+                    {
+                        var receta = new Receta
+                        {
+                            Fecha = DateTime.Now,
+                            Medicamento = recetaDto.Medicamento,
+                            Dosis = recetaDto.Dosis,
+                            Cantidad = recetaDto.Cantidad,
+                            HistoriaClinicaId = historiaClinica.Id
+                        };
+                        _context.Recetas.Add(receta);
+                    }
+                }
+            }
+
+            // ACTUALIZAR ESTADO DEL TURNO A "ATENDIDO"
+            var estadoAtendido = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Atendido");
+            if (turno != null && estadoAtendido != null)
+            {
+                turno.EstadoId = estadoAtendido.Id;
+                _context.Update(turno);
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Mensaje"] = "Consulta finalizada correctamente.";
+            return RedirectToAction(nameof(AtenderConsultorio));
         }
     }
 }

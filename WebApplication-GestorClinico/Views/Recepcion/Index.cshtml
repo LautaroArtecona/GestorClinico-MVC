@@ -1,0 +1,124 @@
+﻿@model List<WebApplication_GestorClinico.Models.Turno>
+
+@{
+    ViewData["Title"] = "Recepción de Pacientes";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <h3 class="fw-bold text-dark mb-4"><i class="bi bi-person-check"></i> Recepción de Consultorio</h3>
+
+    @if (TempData["Mensaje"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle"></i> @TempData["Mensaje"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body bg-light">
+            <form asp-action="Index" method="get" class="row g-3 align-items-end">
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Sede / Centro Médico</label>
+                    <select name="centroId" class="form-select" asp-items="ViewBag.Centros">
+                        <option value="">-- Seleccionar Sede --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Buscar por DNI Paciente</label>
+                    <div class="input-group">
+                        <input type="text" name="dniPaciente" class="form-control" value="@ViewBag.DniBusqueda" placeholder="Ej: 44444444" />
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Buscar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold">Turnos del Día (@DateTime.Today.ToString("dd/MM/yyyy"))</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Hora</th>
+                            <th>Paciente</th>
+                            <th>Especialidad / Médico</th>
+                            <th>Estado Actual</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var turno in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold text-primary">@turno.FechaHoraInicio.ToString("HH:mm")</td>
+                                <td>
+                                    <span class="d-block fw-bold">@turno.Paciente.Apellido, @turno.Paciente.Nombre</span>
+                                    <small class="text-muted">DNI: @turno.Paciente.Dni</small>
+                                </td>
+                                <td>
+                                    <span class="d-block">@turno.Especialidad.Nombre</span>
+                                    <small class="text-muted">Dr/a. @turno.Medico.Apellido</small>
+                                </td>
+                                <td>
+                                    @if (turno.Estado.Nombre == "Asignado")
+                                    {
+                                        <span class="badge bg-warning text-dark">Pendiente Llegada</span>
+                                    }
+                                    else if (turno.Estado.Nombre == "En Espera")
+                                    {
+                                        <span class="badge bg-success">En Sala de Espera</span>
+                                    }
+                                    else if (turno.Estado.Nombre == "Atendido")
+                                    {
+                                        <span class="badge bg-secondary">Atendido</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-dark border">@turno.Estado.Nombre</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (turno.Estado.Nombre == "Asignado")
+                                    {
+                                        <form asp-action="DarPresente" method="post">
+                                            <input type="hidden" name="turnoId" value="@turno.Id" />
+                                            <button type="submit" class="btn btn-success btn-sm fw-bold">
+                                                <i class="bi bi-check-lg"></i> DAR PRESENTE
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (turno.Estado.Nombre == "En Espera")
+                                    {
+                                        <span class="text-success fw-bold small"><i class="bi bi-check-all"></i> Recepcionado</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else if (ViewBag.CentroSeleccionado != null || !string.IsNullOrEmpty(ViewBag.DniBusqueda as string))
+    {
+        <div class="alert alert-warning text-center">
+            No se encontraron turnos para hoy con los filtros seleccionados.
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-arrow-up-circle fs-1"></i>
+            <p class="mt-2">Seleccione una sede o ingrese un DNI para comenzar.</p>
+        </div>
+    }
+</div>

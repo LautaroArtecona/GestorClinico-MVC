@@ -190,13 +190,12 @@ namespace WebApplication_GestorClinico.Controllers
         {
             // Identificar al Médico Logueado
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Index", "Home"); // Seguridad
+            if (user == null) return RedirectToAction("Index", "Home");
 
             var medico = await _context.Medicos.FirstOrDefaultAsync(m => m.UsuarioId == user.Id);
-            if (medico == null) return View("Error"); // O manejarlo
+            if (medico == null) return View("Error");
 
-            // Busca la proxima fecha con turnos
-
+            // Buscar si tiene turnos desde hoy en adelante
             var proximoTurno = await _context.Turnos
                 .Where(t => t.MedicoId == medico.Id &&
                             t.Activo == true &&
@@ -210,14 +209,14 @@ namespace WebApplication_GestorClinico.Controllers
                 TieneAgenda = false
             };
 
-            // Si encontramos una fecha, calculamos las estadísticas de ese día
+            // calculamos estadísticas
             if (proximoTurno != null)
             {
                 var fechaAnalizar = proximoTurno.FechaHoraInicio.Date;
 
-                // Traemos todos los turnos de ese día específico
+                // turnos de ese día específico
                 var turnosDelDia = await _context.Turnos
-                    .Include(t => t.Estado)
+                    .Include(t => t.Estado) 
                     .Where(t => t.MedicoId == medico.Id &&
                                 t.Activo == true &&
                                 t.FechaHoraInicio.Date == fechaAnalizar)
@@ -228,13 +227,18 @@ namespace WebApplication_GestorClinico.Controllers
                     modelo.TieneAgenda = true;
                     modelo.ProximaFecha = fechaAnalizar;
 
-                    // Contadores
-                    modelo.TurnosLibres = turnosDelDia.Count(t => t.Estado.Nombre == "Libre");
-                    modelo.TurnosAsignados = turnosDelDia.Count(t => t.Estado.Nombre == "Asignado"); // O "Otorgado"
-
-                    // Rango Horario (Min y Max)
+                    // Rango Horario
                     modelo.HorarioInicio = turnosDelDia.Min(t => t.FechaHoraInicio).ToString("HH:mm");
-                    modelo.HorarioFin = turnosDelDia.Max(t => t.FechaHoraInicio).AddMinutes(turnosDelDia.First().DuracionEnMinutos).ToString("HH:mm");
+                    // Calculamos al último turno
+                    var ultimoTurno = turnosDelDia.OrderBy(t => t.FechaHoraInicio).Last();
+                    modelo.HorarioFin = ultimoTurno.FechaHoraInicio.AddMinutes(ultimoTurno.DuracionEnMinutos).ToString("HH:mm");
+
+                    // --- CONTADORES ---
+                    modelo.TurnosLibres = turnosDelDia.Count(t => t.Estado.Nombre == "Libre");
+                    modelo.TurnosAsignados = turnosDelDia.Count(t =>
+                        t.Estado.Nombre == "Asignado" ||
+                        t.Estado.Nombre == "En Espera" ||
+                        t.Estado.Nombre == "Atendido");
                 }
             }
 

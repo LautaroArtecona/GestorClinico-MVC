@@ -1,0 +1,184 @@
+﻿@model WebApplication_GestorClinico.Models.Vistas.AtencionGuardia
+
+@{
+    ViewData["Title"] = "Atención de Consultorio";
+    Layout = "~/Views/Shared/_LayoutMedico.cshtml";
+}
+
+<div class="container py-4">
+
+    <div class="card border-0 shadow-sm mb-4 border-top border-4 border-primary">
+        <div class="card-header bg-primary text-white py-2">
+            <h5 class="m-0 fw-bold"><i class="bi bi-person-vcard"></i> Paciente en Consulta</h5>
+        </div>
+        <div class="card-body bg-light">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <small class="text-uppercase text-muted fw-bold">Paciente</small>
+                    <div class="fs-5 fw-bold text-dark">@Model.NombrePaciente</div>
+                </div>
+                <div class="col-md-4 border-start border-end">
+                    <small class="text-uppercase text-muted fw-bold">DNI</small>
+                    <div class="fs-5 text-dark">@Model.Dni</div>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-uppercase text-muted fw-bold">Obra Social</small>
+                    <div class="fs-5 text-dark">@Model.ObraSocial</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="FinalizarAtencion" asp-controller="Agenda" method="post" id="formAtencion">
+
+        <input type="hidden" asp-for="TurnoId" />
+        <input type="hidden" asp-for="PacienteId" />
+        <input type="hidden" asp-for="NombrePaciente" />
+        <input type="hidden" asp-for="Dni" />
+        <input type="hidden" asp-for="ObraSocial" />
+        <input type="hidden" asp-for="IdCola" value="0" />
+
+        <div class="card border-0 shadow-sm p-4 mb-4">
+            <h4 class="text-primary mb-3 border-bottom pb-2">Evolución Clínica</h4>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Diagnóstico Principal</label>
+                <input asp-for="Diagnostico" class="form-control form-control-lg" placeholder="Ej: Bronquitis Aguda" />
+                <span asp-validation-for="Diagnostico" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tratamiento / Indicaciones</label>
+                <textarea asp-for="Tratamiento" class="form-control" rows="3" placeholder="Ej: Ibuprofeno 600mg cada 8hs..."></textarea>
+                <span asp-validation-for="Tratamiento" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Observaciones</label>
+                <textarea asp-for="Observacion" class="form-control" rows="2" placeholder="Notas adicionales sobre la consulta..."></textarea>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                <h5 class="text-secondary m-0"><i class="bi bi-file-earmark-medical"></i> Órdenes Médicas</h5>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="agregarOrden()">
+                    + Agregar Estudio
+                </button>
+            </div>
+
+            <table class="table table-bordered table-sm" id="tablaOrdenes">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40%;">Estudio Solicitado</th>
+                        <th>Diagnóstico / Justificación</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="listaOrdenes">
+                </tbody>
+            </table>
+            <div id="sinOrdenes" class="text-center text-muted py-2 small">No se solicitaron estudios.</div>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                <h5 class="text-secondary m-0"><i class="bi bi-capsule"></i> Recetario</h5>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="agregarReceta()">
+                    + Agregar Medicamento
+                </button>
+            </div>
+
+            <table class="table table-bordered table-sm" id="tablaRecetas">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40%;">Medicamento (Droga)</th>
+                        <th>Dosis / Presentación</th>
+                        <th style="width: 15%;">Cantidad</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="listaRecetas">
+                </tbody>
+            </table>
+            <div id="sinRecetas" class="text-center text-muted py-2 small">No se recetaron medicamentos.</div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-5 pt-3 border-top">
+            <a asp-action="AtenderConsultorio" class="btn btn-outline-secondary px-4 py-2">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-success px-5 py-2 fw-bold shadow">
+                <i class="bi bi-check-circle-fill me-2"></i> FINALIZAR CONSULTA
+            </button>
+        </div>
+
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        let indiceOrden = 0;
+        let indiceReceta = 0;
+
+        function agregarOrden() {
+            document.getElementById('sinOrdenes').style.display = 'none';
+
+            const tbody = document.getElementById('listaOrdenes');
+            const row = `
+                <tr>
+                    <td>
+                        <input type="text" name="Ordenes[${indiceOrden}].NombreEstudio" class="form-control form-control-sm" placeholder="Ej: Radiografía Torax" required />
+                    </td>
+                    <td>
+                        <input type="text" name="Ordenes[${indiceOrden}].Diagnostico" class="form-control form-control-sm" placeholder="Justificación" />
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm py-0" onclick="eliminarFila(this, 'orden')">&times;</button>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', row);
+            indiceOrden++;
+        }
+
+        function agregarReceta() {
+            document.getElementById('sinRecetas').style.display = 'none';
+
+            const tbody = document.getElementById('listaRecetas');
+            const row = `
+                <tr>
+                    <td>
+                        <input type="text" name="Recetas[${indiceReceta}].Medicamento" class="form-control form-control-sm" placeholder="Ej: Amoxicilina" required />
+                    </td>
+                    <td>
+                        <input type="text" name="Recetas[${indiceReceta}].Dosis" class="form-control form-control-sm" placeholder="500mg" />
+                    </td>
+                    <td>
+                        <input type="number" name="Recetas[${indiceReceta}].Cantidad" class="form-control form-control-sm" value="1" min="1" />
+                    </td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm py-0" onclick="eliminarFila(this, 'receta')">&times;</button>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', row);
+            indiceReceta++;
+        }
+
+        function eliminarFila(btn, tipo) {
+            const row = btn.closest('tr');
+            row.remove();
+
+            // Si no quedan filas, mostrar el mensaje de "No hay datos"
+            if(tipo === 'orden' && document.getElementById('listaOrdenes').children.length === 0) {
+                document.getElementById('sinOrdenes').style.display = 'block';
+            }
+            if(tipo === 'receta' && document.getElementById('listaRecetas').children.length === 0) {
+                document.getElementById('sinRecetas').style.display = 'block';
+            }
+        }
+    </script>
+}

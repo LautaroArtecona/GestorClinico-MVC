@@ -22,19 +22,7 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Agendas/Gestionar
         public IActionResult Gestionar()
         {
-            //  .Select() para crear una lista temporal con un campo nuevo "NombreCompleto" para no mostrar solo el apellido del medico
-            var listaMedicos = _context.Medicos
-                .Select(m => new
-                {
-                    Id = m.Id,
-                    NombreCompleto = m.Apellido + ", " + m.Nombre 
-                })
-                .OrderBy(m => m.NombreCompleto) 
-                .ToList();
-
-            // Cargamos las listas para los Dropdowns
-            ViewData["MedicoId"] = new SelectList(listaMedicos, "Id", "NombreCompleto"); 
-            ViewData["CentroMedicoId"] = new SelectList(_context.CentrosMedicos, "Id", "Barrio"); 
+            CargarListasDesplegables();
 
             return View();
         }
@@ -56,69 +44,19 @@ namespace WebApplication_GestorClinico.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Recargar listas si hay error
-                var listaMedicos = _context.Medicos
-                    .Select(m => new { Id = m.Id, NombreCompleto = m.Apellido + ", " + m.Nombre })
-                    .OrderBy(m => m.NombreCompleto)
-                    .ToList();
-
-                ViewData["MedicoId"] = new SelectList(listaMedicos, "Id", "NombreCompleto", modelo.MedicoId);
-
-                ViewData["CentroMedicoId"] = new SelectList(_context.CentrosMedicos, "Id", "Barrio", modelo.CentroMedicoId);
+                CargarListasDesplegables(modelo.MedicoId, modelo.CentroMedicoId);
                 return View("Gestionar", modelo);
             }
 
             // Obtener datos necesarios (Medico para saber su especialidad, Estado Libre)
             var medico = await _context.Medicos.FindAsync(modelo.MedicoId);
-
             var estadoLibre = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Libre");
 
-            // toma posible error
-            if (estadoLibre == null)
-            {
-                TempData["Error"] = "Error: No existe el estado 'Libre' en el sistema. Créelo primero.";
-                return RedirectToAction(nameof(Gestionar));
-            }
-
-            // LÓGICA DE GENERACIÓN en bucle
-            List<Turno> turnosGenerados = new List<Turno>();
-
-            // se itera día por día desde Inicio hasta Fin
-            for (DateTime dia = modelo.FechaDesde; dia <= modelo.FechaHasta; dia = dia.AddDays(1))
-            {
-                // Verificamos si el día actual (Lunes, Martes...) está en la lista elegida
-                // (DayOfWeek devuelve 0 para Domingo, 1 Lunes, etc.)
-                if (modelo.DiasSeleccionados.Contains((int)dia.DayOfWeek))
-                {
-                    // Si es un día elegido, generamos los horarios
-                    DateTime horaActual = dia.Date + modelo.HoraInicio;
-                    DateTime horaLimite = dia.Date + modelo.HoraFin;
-
-                    while (horaActual < horaLimite)
-                    {
-                        // Crear el Turno
-                        var nuevoTurno = new Turno
-                        {
-                            FechaHoraInicio = horaActual,
-                            DuracionEnMinutos = modelo.DuracionMinutos,
-                            EstadoId = estadoLibre.Id,
-                            MedicoId = modelo.MedicoId,
-                            CentroMedicoId = modelo.CentroMedicoId,
-                            EspecialidadId = medico.EspecialidadId, // Hereda la especialidad del médico
-                            PacienteId = null, // Nace libre
-                            Activo = true
-                        };
-
-                        turnosGenerados.Add(nuevoTurno);
-
-                        // Avanzamos el horario para el nuevo turno
-                        horaActual = horaActual.AddMinutes(modelo.DuracionMinutos);
-                    }
-                }
-            }
+            // Llamada al método privado
+            var turnosGenerados = CalcularTurnos(modelo, estadoLibre.Id, medico.EspecialidadId);
 
             // Guardado Masivo
-            if (turnosGenerados.Count > 0)
+            if (turnosGenerados.Any())
             {
                 _context.Turnos.AddRange(turnosGenerados);
                 await _context.SaveChangesAsync();
@@ -131,6 +69,8 @@ namespace WebApplication_GestorClinico.Controllers
 
             return RedirectToAction(nameof(Gestionar));
         }
+
+        
 
         // LISTADO DE FECHAS
 
@@ -273,26 +213,14 @@ namespace WebApplication_GestorClinico.Controllers
 
             if (!ModelState.IsValid) return View("Atender", model);
 
-            // Buscar Turno y Historia Clínica
+            // Obtener Turno y Médico
             var turno = await _context.Turnos.FindAsync(model.TurnoId);
+            if (turno == null) return RedirectToAction(nameof(AtenderConsultorio));
 
-            var historiaClinica = await _context.HistoriasClinicas
-                .FirstOrDefaultAsync(h => h.PacienteId == model.PacienteId);
+            // Obtener o Crear Historia Clínica 
+            var historiaClinica = await ObtenerOCrearHistoria(model.PacienteId);
 
-            // Si no tiene historia, la creamos
-            if (historiaClinica == null)
-            {
-                // CORREGIDO: Quitamos FechaCreacion para evitar el error
-                historiaClinica = new HistoriaClinica
-                {
-                    PacienteId = model.PacienteId
-                };
-
-                _context.Add(historiaClinica);
-                await _context.SaveChangesAsync();
-            }
-
-            // Guardar Evolución
+            // Crear y Guardar la Evolución
             var evolucion = new EvolucionMedica
             {
                 HistoriaClinicaId = historiaClinica.Id,
@@ -300,63 +228,131 @@ namespace WebApplication_GestorClinico.Controllers
                 Fecha = DateTime.Now,
                 Diagnostico = model.Diagnostico,
                 Tratamiento = model.Tratamiento,
-                Observacion = model.Observacion 
+                Observacion = model.Observacion
             };
             _context.Add(evolucion);
 
-            // Guardar Recetas y Ordenes
-            // GUARDAR ÓRDENES MÉDICAS 
-            if (model.Ordenes != null && model.Ordenes.Any())
-            {
-                foreach (var ordenDto in model.Ordenes)
-                {
-                    // Se guardo solo si hay algo escrito
-                    if (!string.IsNullOrEmpty(ordenDto.NombreEstudio))
-                    {
-                        var orden = new OrdenMedica
-                        {
-                            Fecha = DateTime.Now,
-                            NombreEstudio = ordenDto.NombreEstudio,
-                            Diagnostico = ordenDto.Diagnostico ?? model.Diagnostico, // Si no se pone nada, usa el general
-                            HistoriaClinicaId = historiaClinica.Id
-                        };
-                        _context.OrdenesMedicas.Add(orden);
-                    }
-                }
-            }
+            // Procesar Listas Auxiliares
+            GuardarOrdenes(model.Ordenes, historiaClinica.Id, model.Diagnostico);
+            GuardarRecetas(model.Recetas, historiaClinica.Id);
 
-            //  GUARDAR RECETAS
-            if (model.Recetas != null && model.Recetas.Any())
-            {
-                foreach (var recetaDto in model.Recetas)
-                {
-                    if (!string.IsNullOrEmpty(recetaDto.Medicamento))
-                    {
-                        var receta = new Receta
-                        {
-                            Fecha = DateTime.Now,
-                            Medicamento = recetaDto.Medicamento,
-                            Dosis = recetaDto.Dosis,
-                            Cantidad = recetaDto.Cantidad,
-                            HistoriaClinicaId = historiaClinica.Id
-                        };
-                        _context.Recetas.Add(receta);
-                    }
-                }
-            }
+            // Actualizar Estado del Turno
+            await ActualizarEstadoTurno(turno);
 
-            // ACTUALIZAR ESTADO DEL TURNO A "ATENDIDO"
-            var estadoAtendido = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Atendido");
-            if (turno != null && estadoAtendido != null)
-            {
-                turno.EstadoId = estadoAtendido.Id;
-                _context.Update(turno);
-            }
-
+            // Guardar TODO en una sola transacción
             await _context.SaveChangesAsync();
 
             TempData["Mensaje"] = "Consulta finalizada correctamente.";
             return RedirectToAction(nameof(AtenderConsultorio));
+        }
+
+        // METODOS AUXILIARES
+        private void GuardarOrdenes(List<OrdenMedicaDTO> ordenesDto, int historiaId, string diagnosticoGeneral)
+        {
+            if (ordenesDto == null || !ordenesDto.Any()) return;
+
+            foreach (var dto in ordenesDto)
+            {
+                if (!string.IsNullOrEmpty(dto.NombreEstudio))
+                {
+                    _context.OrdenesMedicas.Add(new OrdenMedica
+                    {
+                        Fecha = DateTime.Now,
+                        NombreEstudio = dto.NombreEstudio,
+                        Diagnostico = dto.Diagnostico ?? diagnosticoGeneral,
+                        HistoriaClinicaId = historiaId
+                    });
+                }
+            }
+        }
+
+        private void GuardarRecetas(List<RecetaDTO> recetasDto, int historiaId)
+        {
+            if (recetasDto == null || !recetasDto.Any()) return;
+
+            foreach (var dto in recetasDto)
+            {
+                if (!string.IsNullOrEmpty(dto.Medicamento))
+                {
+                    _context.Recetas.Add(new Receta
+                    {
+                        Fecha = DateTime.Now,
+                        Medicamento = dto.Medicamento,
+                        Dosis = dto.Dosis,
+                        Cantidad = dto.Cantidad,
+                        HistoriaClinicaId = historiaId
+                    });
+                }
+            }
+        }
+
+        private async Task ActualizarEstadoTurno(Turno turno)
+        {
+            var estadoAtendido = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Atendido");
+            if (estadoAtendido != null)
+            {
+                turno.EstadoId = estadoAtendido.Id;
+                _context.Update(turno);
+            }
+        }
+
+        private async Task<HistoriaClinica> ObtenerOCrearHistoria(int pacienteId)
+        {
+            var historia = await _context.HistoriasClinicas
+                .FirstOrDefaultAsync(h => h.PacienteId == pacienteId);
+
+            if (historia == null)
+            {
+                historia = new HistoriaClinica { PacienteId = pacienteId };
+                _context.Add(historia);
+                // Guardo aca para asegurar que tenga ID antes de seguir
+                await _context.SaveChangesAsync();
+            }
+            return historia;
+        }
+
+        // METODO AUXILIAR PARA CARGAR LISTAS
+        private void CargarListasDesplegables(int? medicoIdSeleccionado = null, int? centroIdSeleccionado = null)
+        {
+            var listaMedicos = _context.Medicos
+                .Select(m => new { Id = m.Id, NombreCompleto = m.Apellido + ", " + m.Nombre })
+                .OrderBy(m => m.NombreCompleto)
+                .ToList();
+
+            ViewData["MedicoId"] = new SelectList(listaMedicos, "Id", "NombreCompleto", medicoIdSeleccionado);
+            ViewData["CentroMedicoId"] = new SelectList(_context.CentrosMedicos, "Id", "Barrio", centroIdSeleccionado);
+        }
+
+        // METODO AUXILIAR QUE DEVUELVE LISTA DE TURNOS
+        private List<Turno> CalcularTurnos(GeneracionAgenda modelo, int estadoLibreId, int especialidadId)
+        {
+            List<Turno> turnos = new List<Turno>();
+
+            for (DateTime dia = modelo.FechaDesde; dia <= modelo.FechaHasta; dia = dia.AddDays(1))
+            {
+                if (modelo.DiasSeleccionados.Contains((int)dia.DayOfWeek))
+                {
+                    DateTime horaActual = dia.Date + modelo.HoraInicio;
+                    DateTime horaLimite = dia.Date + modelo.HoraFin;
+
+                    while (horaActual < horaLimite)
+                    {
+                        turnos.Add(new Turno
+                        {
+                            FechaHoraInicio = horaActual,
+                            DuracionEnMinutos = modelo.DuracionMinutos,
+                            EstadoId = estadoLibreId,
+                            MedicoId = modelo.MedicoId,
+                            CentroMedicoId = modelo.CentroMedicoId,
+                            EspecialidadId = especialidadId,
+                            PacienteId = null,
+                            Activo = true
+                        });
+                        horaActual = horaActual.AddMinutes(modelo.DuracionMinutos);
+                    }
+                }
+            }
+            return turnos;
         }
     }
 }

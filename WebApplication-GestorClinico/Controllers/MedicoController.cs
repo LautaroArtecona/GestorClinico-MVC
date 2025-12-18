@@ -2,10 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using WebApplication_GestorClinico.Context;
 using WebApplication_GestorClinico.Models;
 
@@ -27,27 +23,22 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Medico
         public async Task<IActionResult> Index()
         {
-            var clinicaDBContext = _context.Medicos.Include(m => m.Clinica).Include(m => m.Especialidad).Include(m => m.Usuario);
-            return View(await clinicaDBContext.ToListAsync());
+            var medicos = _context.Medicos.Include(m => m.Clinica).Include(m => m.Especialidad).Include(m => m.Usuario);
+            return View(await medicos.ToListAsync());
         }
 
         // GET: Medico/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var medico = await _context.Medicos
                 .Include(m => m.Clinica)
                 .Include(m => m.Especialidad)
                 .Include(m => m.Usuario)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (medico == null)
-            {
-                return NotFound();
-            }
+
+            if (medico == null) return NotFound();
 
             return View(medico);
         }
@@ -55,138 +46,60 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Medico/Create
         public IActionResult Create()
         {
-            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Nombre");
-
+            CargarDesplegables();
             return View();
         }
 
         // POST: Medico/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Matricula,EspecialidadId,Dni,Nombre,Apellido,Email")] Medico medico)
         {
-
-            // BUSCAR DUPLICADOS (Incluyendo los borrados)
-            var medicoExistente = await _context.Medicos
-                .IgnoreQueryFilters() // Mira también los inactivos
-                .FirstOrDefaultAsync(m => m.Matricula == medico.Matricula);
-
-            if (medicoExistente != null)
+            // Validar Duplicados y Reactivación
+            if (await ExisteMedicoDuplicado(medico))
             {
-                if (medicoExistente.Activo)
-                {
-                    //Ya existe y está activo -> Error bloqueante
-                    ModelState.AddModelError("Matricula", "Ya existe un médico activo con esta matrícula.");
-                }
-                else
-                {
-                    // Existe pero está inactivo -> Ofrecer reactivación
-                    // Guardamos el ID del viejo en el ViewBag para usarlo en el botón
-                    ViewBag.IdReactivar = medicoExistente.Id;
-                    ViewBag.NombreReactivar = $"{medicoExistente.Apellido}, {medicoExistente.Nombre}";
-
-                    ModelState.AddModelError("Matricula", "Este médico ya existe en el sistema pero está inactivo (borrado).");
-                }
-
-                // Recargamos lista y devolvemos vista con el error
-                ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Nombre", medico.EspecialidadId);
+                CargarDesplegables(medico.EspecialidadId);
                 return View(medico);
             }
 
-            // Buscamos la única clínica del sistema
-            var clinica = _context.Clinicas.FirstOrDefault();
-            if (clinica != null)
-            {
-                medico.ClinicaId = clinica.Id;
-            }
-            medico.Activo = true;
-
-            ModelState.Remove("Clinica");
-            ModelState.Remove("ClinicaId");
-            ModelState.Remove("Activo");
-            ModelState.Remove("Usuario");
-            ModelState.Remove("UsuarioId");
-
-            // Creacion de Usuario
+            // Preparar Modelo (Asignar Clínica, Activo, Limpiar ModelState)
+            PrepararDatosModelo(medico);
 
             if (ModelState.IsValid)
             {
-                // Verificar si el rol existe, sino lo crea
-                if (!await _roleManager.RoleExistsAsync("Medico"))
+                // Crear Usuario y Rol en Identity
+                var user = await CrearUsuarioIdentity(medico);
+
+                if (user != null)
                 {
-                    await _roleManager.CreateAsync(new IdentityRole("Medico"));
-                }
-
-                // Crear el Usuario de Identity
-                var user = new IdentityUser
-                {
-                    UserName = medico.Matricula, // Usuario = Matrícula
-                    Email = medico.Email,
-                    EmailConfirmed = true
-                };
-
-                // Creamos el usuario con contraseña = Matrícula
-                var result = await _userManager.CreateAsync(user, medico.Matricula);
-
-                if (result.Succeeded)
-                {
-                    // Asignar Rol
-                    await _userManager.AddToRoleAsync(user, "Medico");
-
-                    // Vincular el Médico con el Usuario recién creado
-                    medico.UsuarioId = user.Id; // Guardamos el GUID del usuario
-
-                    //  Guardar el Médico en la BD
+                    //  Vincular y Guardar
+                    medico.UsuarioId = user.Id;
                     _context.Add(medico);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
-                else
-                {
-                    // Si falla (ej. contraseña muy simple o usuario duplicado), mostramos el error
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error.Description);
-                    }
-                }
             }
 
-            // Recargamos la lista de especialidades si falla
-            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Nombre", medico.EspecialidadId);
+            CargarDesplegables(medico.EspecialidadId);
             return View(medico);
         }
 
-        // REACTIVAR medicos con borrado logico
+        // POST: Medico/Reactivar
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reactivar(int id)
         {
-            // Buscamos al médico inactivo
-            var medico = await _context.Medicos
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(m => m.Id == id);
-
+            var medico = await _context.Medicos.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.Id == id);
             if (medico == null) return NotFound();
 
-            // Reactivar Entidad
+            // Reactivar en BD
             medico.Activo = true;
             _context.Medicos.Update(medico);
 
-            // Desbloquear Usuario de Identity
-            if (!string.IsNullOrEmpty(medico.UsuarioId))
-            {
-                var user = await _userManager.FindByIdAsync(medico.UsuarioId);
-                if (user != null)
-                {
-                    // Sacamos el bloqueo del usuario
-                    await _userManager.SetLockoutEndDateAsync(user, null);
-                }
-            }
+            //  Desbloquear Usuario Identity
+            await DesbloquearUsuario(medico.UsuarioId);
 
             await _context.SaveChangesAsync();
-
             TempData["Mensaje"] = $"El médico {medico.Apellido} ha sido reactivado exitosamente.";
             return RedirectToAction(nameof(Index));
         }
@@ -194,33 +107,21 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Medico/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var medico = await _context.Medicos.FindAsync(id);
-            if (medico == null)
-            {
-                return NotFound();
-            }
-            ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", medico.ClinicaId);
-            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", medico.EspecialidadId);
-            ViewData["UsuarioId"] = new SelectList(_context.Users, "Id", "Id", medico.UsuarioId);
+            if (medico == null) return NotFound();
+
+            CargarDesplegables(medico.EspecialidadId);
             return View(medico);
         }
 
         // POST: Medico/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Matricula,EspecialidadId,Dni,Nombre,Apellido,Email,UsuarioId,ClinicaId,Activo")] Medico medico)
         {
-            if (id != medico.Id)
-            {
-                return NotFound();
-            }
+            if (id != medico.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -231,40 +132,27 @@ namespace WebApplication_GestorClinico.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!MedicoExists(medico.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!MedicoExists(medico.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", medico.ClinicaId);
-            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Id", medico.EspecialidadId);
-            ViewData["UsuarioId"] = new SelectList(_context.Users, "Id", "Id", medico.UsuarioId);
+            CargarDesplegables(medico.EspecialidadId);
             return View(medico);
         }
 
         // GET: Medico/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var medico = await _context.Medicos
                 .Include(m => m.Clinica)
                 .Include(m => m.Especialidad)
                 .Include(m => m.Usuario)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (medico == null)
-            {
-                return NotFound();
-            }
+
+            if (medico == null) return NotFound();
 
             return View(medico);
         }
@@ -274,42 +162,19 @@ namespace WebApplication_GestorClinico.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // Buscamos el médico
             var medico = await _context.Medicos.FindAsync(id);
 
             if (medico != null)
             {
+                // Cancelar Turnos Futuros
+                await CancelarTurnosFuturos(id);
 
-                // Buscamos el estado "Cancelado" y cancelamos turnos futuros
-                var estadoCancelado = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Cancelado");
+                // Borrado Lógico
+                medico.Activo = false;
+                _context.Medicos.Update(medico);
 
-                if (estadoCancelado != null)
-                {
-                    var turnosFuturos = await _context.Turnos
-                        .Where(t => t.MedicoId == id && t.FechaHoraInicio > DateTime.Now)
-                        .ToListAsync();
-
-                    foreach (var turno in turnosFuturos)
-                    {
-                        turno.EstadoId = estadoCancelado.Id;
-                        // turno.Activo = false; para que no se vean mas
-                    }
-                }
-
-                //BORRADO LÓGICO
-                medico.Activo = false; // Lo desactivamos
-                _context.Medicos.Update(medico);// Guardamos los cambios (UPDATE, no Remove)
-
-                // BLOQUEO DE USUARIO (NUEVO)
-                if (!string.IsNullOrEmpty(medico.UsuarioId))
-                {
-                    var usuarioIdentity = await _userManager.FindByIdAsync(medico.UsuarioId);
-                    if (usuarioIdentity != null)
-                    {
-                        await _userManager.SetLockoutEnabledAsync(usuarioIdentity, true);
-                        await _userManager.SetLockoutEndDateAsync(usuarioIdentity, DateTimeOffset.MaxValue);
-                    }
-                }
+                // Bloquear acceso al sistema
+                await BloquearUsuario(medico.UsuarioId);
 
                 await _context.SaveChangesAsync();
             }
@@ -320,6 +185,128 @@ namespace WebApplication_GestorClinico.Controllers
         private bool MedicoExists(int id)
         {
             return _context.Medicos.Any(e => e.Id == id);
+        }
+
+
+        //   MÉTODOS AUXILIARES PRIVADOS 
+
+        private void CargarDesplegables(int? especialidadId = null)
+        {
+            ViewData["EspecialidadId"] = new SelectList(_context.Especialidades, "Id", "Nombre", especialidadId);
+        }
+
+        private async Task<bool> ExisteMedicoDuplicado(Medico medico)
+        {
+            var medicoExistente = await _context.Medicos
+               .IgnoreQueryFilters()
+               .FirstOrDefaultAsync(m => m.Matricula == medico.Matricula);
+
+            if (medicoExistente != null)
+            {
+                if (medicoExistente.Activo)
+                {
+                    ModelState.AddModelError("Matricula", "Ya existe un médico activo con esta matrícula.");
+                }
+                else
+                {
+                    // Lógica de Reactivación
+                    ViewBag.IdReactivar = medicoExistente.Id;
+                    ViewBag.NombreReactivar = $"{medicoExistente.Apellido}, {medicoExistente.Nombre}";
+                    ModelState.AddModelError("Matricula", "Este médico ya existe en el sistema pero está inactivo (borrado).");
+                }
+                return true; // Hay duplicado
+            }
+            return false; // No hay duplicado
+        }
+
+        private void PrepararDatosModelo(Medico medico)
+        {
+            var clinica = _context.Clinicas.FirstOrDefault();
+            if (clinica != null) medico.ClinicaId = clinica.Id;
+
+            medico.Activo = true;
+
+            // Limpiamos lo que no viene del form
+            ModelState.Remove("Clinica");
+            ModelState.Remove("ClinicaId");
+            ModelState.Remove("Activo");
+            ModelState.Remove("Usuario");
+            ModelState.Remove("UsuarioId");
+        }
+
+        private async Task<IdentityUser> CrearUsuarioIdentity(Medico medico)
+        {
+            // Verificar/Crear Rol
+            if (!await _roleManager.RoleExistsAsync("Medico"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Medico"));
+            }
+
+            // Crear Objeto Usuario
+            var user = new IdentityUser
+            {
+                UserName = medico.Matricula,
+                Email = medico.Email,
+                EmailConfirmed = true
+            };
+
+            // Guardar en Identity (Pass = Matricula)
+            var result = await _userManager.CreateAsync(user, medico.Matricula);
+
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(user, "Medico");
+                return user;
+            }
+            else
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return null;
+            }
+        }
+
+        private async Task CancelarTurnosFuturos(int medicoId)
+        {
+            var estadoCancelado = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Cancelado");
+            if (estadoCancelado != null)
+            {
+                var turnosFuturos = await _context.Turnos
+                    .Where(t => t.MedicoId == medicoId && t.FechaHoraInicio > DateTime.Now)
+                    .ToListAsync();
+
+                foreach (var turno in turnosFuturos)
+                {
+                    turno.EstadoId = estadoCancelado.Id;
+                }
+            }
+        }
+
+        private async Task BloquearUsuario(string usuarioId)
+        {
+            if (!string.IsNullOrEmpty(usuarioId))
+            {
+                var user = await _userManager.FindByIdAsync(usuarioId);
+                if (user != null)
+                {
+                    await _userManager.SetLockoutEnabledAsync(user, true);
+                    await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+                }
+            }
+        }
+
+        private async Task DesbloquearUsuario(string usuarioId)
+        {
+            if (!string.IsNullOrEmpty(usuarioId))
+            {
+                var user = await _userManager.FindByIdAsync(usuarioId);
+                if (user != null)
+                {
+                    await _userManager.SetLockoutEndDateAsync(user, null);
+                }
+            }
         }
     }
 }

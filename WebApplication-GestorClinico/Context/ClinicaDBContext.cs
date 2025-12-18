@@ -102,7 +102,7 @@ namespace WebApplication_GestorClinico.Context
                 .OnDelete(DeleteBehavior.Restrict);
 
             // FILTROS GLOBALES DE BORRADO LÓGICO (Activo = true)
-            // EF aplicará "WHERE Activo = 1" automáticamente en todas las consultas
+            // EF aplica "WHERE Activo = 1" automáticamente en todas las consultas
 
             // Personas
             modelBuilder.Entity<Paciente>().HasQueryFilter(p => p.Activo);

@@ -42,8 +42,6 @@ namespace WebApplication_GestorClinico.Controllers
             // Filtros
             if (centroId.HasValue)
             {
-                // Asumiendo que Turno tiene relacion con CentroMedico o a través del Médico
-                // Si Turno tiene CentroMedicoId directo:
                 query = query.Where(t => t.CentroMedicoId == centroId);
             }
 
@@ -78,11 +76,10 @@ namespace WebApplication_GestorClinico.Controllers
             }
 
             // Redirigimos conservando el DNI para que no se le borre la pantalla al admin
-            // (Necesitamos recuperar el DNI del paciente para reenviarlo al Index)
             var dni = turno?.Paciente?.Dni;
             if (turno?.Paciente == null)
             {
-                // Si por lazy loading no vino el paciente, lo buscamos rápido
+                // Si por lazy loading no vino el paciente, lo buscamos
                 var t = await _context.Turnos.Include(x => x.Paciente).FirstOrDefaultAsync(x => x.Id == turnoId);
                 dni = t?.Paciente?.Dni;
             }

@@ -86,7 +86,7 @@ namespace WebApplication_GestorClinico.Controllers
                 .Include(p => p.Guardia)
                 .Include(p => p.Estado)
                 .Where(p => p.Estado.Nombre == "En Espera" &&
-                            p.GuardiaId == guardiaId.Value) // <--- FILTRO CLAVE
+                            p.GuardiaId == guardiaId.Value) 
                 .OrderBy(p => p.HoraDeIngreso)
                 .ToListAsync();
 
@@ -133,7 +133,7 @@ namespace WebApplication_GestorClinico.Controllers
                 return View("Ingreso", null);
             }
 
-            // ENCONTRADO: Devolvemos la vista CON el paciente para mostrar la tarjeta
+            // Devolvemos la vista CON el paciente para mostrar la tarjeta
             return View("Ingreso", paciente);
         }
 
@@ -152,7 +152,7 @@ namespace WebApplication_GestorClinico.Controllers
                 .Include(p => p.Estado)
                 .AnyAsync(p => p.PacienteId == idPaciente &&
                           p.Estado.Nombre == "En Espera" &&
-                          p.GuardiaId == guardiaId.Value); // <--- FILTRO CLAVE
+                          p.GuardiaId == guardiaId.Value); 
 
             if (yaEnCola)
             {
@@ -165,7 +165,7 @@ namespace WebApplication_GestorClinico.Controllers
             var nuevoIngreso = new PacienteEnEspera
             {
                 PacienteId = idPaciente,
-                GuardiaId = guardiaId.Value, // Usamos el ID de la sesión
+                GuardiaId = guardiaId.Value,
                 EstadoId = estadoEnEspera.Id,
                 HoraDeIngreso = DateTime.Now
             };
@@ -265,29 +265,17 @@ namespace WebApplication_GestorClinico.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> FinalizarAtencion(AtencionGuardia model)
         {
-            // LIMPIEZA DE VALIDACIÓN
+            //  Limpieza y Validación
             ModelState.Remove("Ordenes");
             ModelState.Remove("Recetas");
 
-            // Validación básica
             if (!ModelState.IsValid) return View("Atender", model);
 
-            var userIdentity = _userManager.GetUserId(User);
-            var medico = await _context.Medicos.FirstOrDefaultAsync(m => m.UsuarioId == userIdentity);
-            if (medico == null) medico = await _context.Medicos.FirstOrDefaultAsync(); // Fallback
+            //  Obtener datos necesarios (Médico y Historia)
+            var medico = await ObtenerMedicoActual();
+            var historia = await ObtenerOCrearHistoria(model.PacienteId);
 
-            // Obtener o Crear Historia Clínica
-            var historia = await _context.HistoriasClinicas
-                .FirstOrDefaultAsync(h => h.PacienteId == model.PacienteId);
-
-            if (historia == null)
-            {
-                historia = new HistoriaClinica { PacienteId = model.PacienteId };
-                _context.Add(historia);
-                await _context.SaveChangesAsync();
-            }
-
-            // Guardar la EVOLUCIÓN 
+            //  Crear y Guardar la Evolución
             var evolucion = new EvolucionMedica
             {
                 Fecha = DateTime.Now,
@@ -299,61 +287,98 @@ namespace WebApplication_GestorClinico.Controllers
             };
             _context.EvolucionesMedicas.Add(evolucion);
 
-            // GUARDAR ÓRDENES MÉDICAS 
-            if (model.Ordenes != null && model.Ordenes.Any())
+            //  Procesar Listas Auxiliares (Usando métodos privados)
+            GuardarOrdenes(model.Ordenes, historia.Id, model.Diagnostico);
+            GuardarRecetas(model.Recetas, historia.Id);
+
+            //  Actualizar la Cola de Espera (Dar salida al paciente)
+            await ActualizarEstadoCola(model.IdCola);
+
+            //  Guardar cambios masivos
+            await _context.SaveChangesAsync();
+
+            TempData["Mensaje"] = "Atención finalizada. Se guardaron evolución, estudios y recetas.";
+            return RedirectToAction(nameof(MedicoIndex));
+        }
+
+
+        //   MÉTODOS PRIVADOS (LOGICA ENCAPSULADA)
+
+        private async Task<Medico> ObtenerMedicoActual()
+        {
+            var userIdentity = _userManager.GetUserId(User);
+            var medico = await _context.Medicos.FirstOrDefaultAsync(m => m.UsuarioId == userIdentity);
+
+            // Fallback: Si por alguna razón no encuentra al médico, devuelve el primero (para evitar crash)
+            return medico ?? await _context.Medicos.FirstOrDefaultAsync();
+        }
+
+        private async Task<HistoriaClinica> ObtenerOCrearHistoria(int pacienteId)
+        {
+            var historia = await _context.HistoriasClinicas
+                .FirstOrDefaultAsync(h => h.PacienteId == pacienteId);
+
+            if (historia == null)
             {
-                foreach (var ordenDto in model.Ordenes)
+                historia = new HistoriaClinica { PacienteId = pacienteId };
+                _context.Add(historia);
+                // Guardamos ya para asegurar que tenga ID generado por la BD
+                await _context.SaveChangesAsync();
+            }
+            return historia;
+        }
+
+        private void GuardarOrdenes(List<OrdenMedicaDTO> ordenesDto, int historiaId, string diagnosticoGeneral)
+        {
+            if (ordenesDto == null || !ordenesDto.Any()) return;
+
+            foreach (var dto in ordenesDto)
+            {
+                if (!string.IsNullOrEmpty(dto.NombreEstudio))
                 {
-                    // Se guardo solo si hay algo escrito
-                    if (!string.IsNullOrEmpty(ordenDto.NombreEstudio))
+                    _context.OrdenesMedicas.Add(new OrdenMedica
                     {
-                        var orden = new OrdenMedica
-                        {
-                            Fecha = DateTime.Now,
-                            NombreEstudio = ordenDto.NombreEstudio,
-                            Diagnostico = ordenDto.Diagnostico ?? model.Diagnostico, // Si no pone nada, usa el general
-                            HistoriaClinicaId = historia.Id
-                        };
-                        _context.OrdenesMedicas.Add(orden);
-                    }
+                        Fecha = DateTime.Now,
+                        NombreEstudio = dto.NombreEstudio,
+                        // Si no especificó diagnóstico en el estudio, usa el general de la consulta
+                        Diagnostico = dto.Diagnostico ?? diagnosticoGeneral,
+                        HistoriaClinicaId = historiaId
+                    });
                 }
             }
+        }
 
-            //  GUARDAR RECETAS
-            if (model.Recetas != null && model.Recetas.Any())
+        private void GuardarRecetas(List<RecetaDTO> recetasDto, int historiaId)
+        {
+            if (recetasDto == null || !recetasDto.Any()) return;
+
+            foreach (var dto in recetasDto)
             {
-                foreach (var recetaDto in model.Recetas)
+                if (!string.IsNullOrEmpty(dto.Medicamento))
                 {
-                    if (!string.IsNullOrEmpty(recetaDto.Medicamento))
+                    _context.Recetas.Add(new Receta
                     {
-                        var receta = new Receta
-                        {
-                            Fecha = DateTime.Now,
-                            Medicamento = recetaDto.Medicamento,
-                            Dosis = recetaDto.Dosis,
-                            Cantidad = recetaDto.Cantidad,
-                            HistoriaClinicaId = historia.Id
-                        };
-                        _context.Recetas.Add(receta);
-                    }
+                        Fecha = DateTime.Now,
+                        Medicamento = dto.Medicamento,
+                        Dosis = dto.Dosis,
+                        Cantidad = dto.Cantidad,
+                        HistoriaClinicaId = historiaId
+                    });
                 }
             }
+        }
 
-            // Actualizar estado del paciente en cola
-            var registroCola = await _context.PacientesEnEspera.FindAsync(model.IdCola);
+        private async Task ActualizarEstadoCola(int idCola)
+        {
+            var registroCola = await _context.PacientesEnEspera.FindAsync(idCola);
             var estadoAtendido = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Atendido");
 
             if (registroCola != null && estadoAtendido != null)
             {
                 registroCola.EstadoId = estadoAtendido.Id;
-                registroCola.HoraAtencion = DateTime.Now; // Guardamos la hora de salida
+                registroCola.HoraAtencion = DateTime.Now; // Marcamos la hora de salida
                 _context.Update(registroCola);
             }
-
-            await _context.SaveChangesAsync();
-
-            TempData["Mensaje"] = "Atención finalizada. Se guardaron evolución, estudios y recetas.";
-            return RedirectToAction(nameof(MedicoIndex));
         }
     }
 

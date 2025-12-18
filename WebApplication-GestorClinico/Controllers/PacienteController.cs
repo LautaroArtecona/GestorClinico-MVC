@@ -2,10 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using WebApplication_GestorClinico.Context;
 using WebApplication_GestorClinico.Models;
 
@@ -27,26 +23,21 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Paciente
         public async Task<IActionResult> Index()
         {
-            var clinicaDBContext = _context.Pacientes.Include(p => p.Clinica).Include(p => p.Usuario);
-            return View(await clinicaDBContext.ToListAsync());
+            var pacientes = _context.Pacientes.Include(p => p.Clinica).Include(p => p.Usuario);
+            return View(await pacientes.ToListAsync());
         }
 
         // GET: Paciente/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var paciente = await _context.Pacientes
                 .Include(p => p.Clinica)
                 .Include(p => p.Usuario)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (paciente == null)
-            {
-                return NotFound();
-            }
+
+            if (paciente == null) return NotFound();
 
             return View(paciente);
         }
@@ -58,105 +49,41 @@ namespace WebApplication_GestorClinico.Controllers
         }
 
         // POST: Paciente/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,ObraSocial,Dni,Nombre,Apellido,Email,Activo")] Paciente paciente)
         {
-
-            // BUSCAR POR DNI
-            var pacienteExistente = await _context.Pacientes
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(p => p.Dni == paciente.Dni);
-
-            if (pacienteExistente != null)
+            // Validar Duplicados y Reactivación
+            if (await ExistePacienteDuplicado(paciente))
             {
-                if (pacienteExistente.Activo)
-                {
-                    ModelState.AddModelError("Dni", "Ya existe un paciente activo con este DNI.");
-                }
-                else
-                {
-                    ViewBag.IdReactivar = pacienteExistente.Id;
-                    ViewBag.NombreReactivar = $"{pacienteExistente.Apellido}, {pacienteExistente.Nombre}";
-                    ModelState.AddModelError("Dni", "El paciente existe pero está inactivo.");
-                }
                 return View(paciente);
             }
 
-            // AUTOMATIZACIÓN DE DATOS
-            // Asignar Clínica única
-            var clinica = _context.Clinicas.FirstOrDefault();
-            if (clinica != null)
-            {
-                paciente.ClinicaId = clinica.Id;
-            }
-
-            // comienza en activo (borrado logico)
-            paciente.Activo = true;
-
-            // LIMPIEZA DE VALIDACIONES
-            ModelState.Remove("Clinica");
-            ModelState.Remove("ClinicaId");
-            ModelState.Remove("Activo");
-            ModelState.Remove("Usuario");
-            ModelState.Remove("UsuarioId");
-            ModelState.Remove("HistoriaClinica");
-
-
-            // Crea y asigna un usuario Identity al paciente
+            // Preparar Modelo
+            PrepararDatosModelo(paciente);
 
             if (ModelState.IsValid)
             {
-                if (!await _roleManager.RoleExistsAsync("Paciente"))
+                // Crear Usuario Identity
+                var user = await CrearUsuarioIdentity(paciente);
+
+                if (user != null)
                 {
-                    await _roleManager.CreateAsync(new IdentityRole("Paciente"));
-                }
-
-                var user = new IdentityUser
-                {
-                    UserName = paciente.Dni, // Usuario = DNI
-                    Email = paciente.Email,
-                    EmailConfirmed = true
-                };
-
-                // Contraseña = DNI
-                var result = await _userManager.CreateAsync(user, paciente.Dni);
-
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(user, "Paciente");
-
-                    paciente.UsuarioId = user.Id; // Vinculación
-
+                    // Guardar Paciente
+                    paciente.UsuarioId = user.Id;
                     _context.Add(paciente);
                     await _context.SaveChangesAsync();
 
-                    // Crea la historia clinica una vez que se registra al paciente
-
-                    var nuevaHistoria = new HistoriaClinica
-                    {
-                        PacienteId = paciente.Id // Usamos el ID que acabamos de generar
-                    };
-                    _context.Add(nuevaHistoria);
-                    await _context.SaveChangesAsync(); 
-
+                    // Crear Historia Clínica Inicial
+                    await CrearHistoriaClinicaInicial(paciente.Id);
 
                     return RedirectToAction(nameof(Index));
-                }
-                else
-                {
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error.Description);
-                    }
                 }
             }
             return View(paciente);
         }
 
-        // REACTIVAR
+        // POST: Paciente/Reactivar
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reactivar(int id)
@@ -164,16 +91,12 @@ namespace WebApplication_GestorClinico.Controllers
             var paciente = await _context.Pacientes.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id);
             if (paciente == null) return NotFound();
 
-            // Reactivar
+            // Reactivar BD
             paciente.Activo = true;
             _context.Pacientes.Update(paciente);
 
             // Desbloquear Usuario
-            if (!string.IsNullOrEmpty(paciente.UsuarioId))
-            {
-                var user = await _userManager.FindByIdAsync(paciente.UsuarioId);
-                if (user != null) await _userManager.SetLockoutEndDateAsync(user, null);
-            }
+            await DesbloquearUsuario(paciente.UsuarioId);
 
             await _context.SaveChangesAsync();
             TempData["Mensaje"] = "Paciente reactivado exitosamente.";
@@ -183,32 +106,20 @@ namespace WebApplication_GestorClinico.Controllers
         // GET: Paciente/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var paciente = await _context.Pacientes.FindAsync(id);
-            if (paciente == null)
-            {
-                return NotFound();
-            }
-            ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", paciente.ClinicaId);
-            ViewData["UsuarioId"] = new SelectList(_context.Users, "Id", "Id", paciente.UsuarioId);
+            if (paciente == null) return NotFound();
+
             return View(paciente);
         }
 
         // POST: Paciente/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,ObraSocial,Dni,Nombre,Apellido,Email,UsuarioId,ClinicaId,Activo")] Paciente paciente)
         {
-            if (id != paciente.Id)
-            {
-                return NotFound();
-            }
+            if (id != paciente.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -219,38 +130,25 @@ namespace WebApplication_GestorClinico.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!PacienteExists(paciente.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!PacienteExists(paciente.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ClinicaId"] = new SelectList(_context.Clinicas, "Id", "Id", paciente.ClinicaId);
-            ViewData["UsuarioId"] = new SelectList(_context.Users, "Id", "Id", paciente.UsuarioId);
             return View(paciente);
         }
 
         // GET: Paciente/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var paciente = await _context.Pacientes
                 .Include(p => p.Clinica)
                 .Include(p => p.Usuario)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (paciente == null)
-            {
-                return NotFound();
-            }
+
+            if (paciente == null) return NotFound();
 
             return View(paciente);
         }
@@ -260,46 +158,19 @@ namespace WebApplication_GestorClinico.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // Buscamos al paciente
             var paciente = await _context.Pacientes.FindAsync(id);
 
             if (paciente != null)
             {
-                // Buscamos el estado "Libre" para liberar los turnos tomados
-                var estadoLibre = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Libre");
+                // Liberar Turnos Futuros
+                await LiberarTurnosFuturos(id);
 
-                if (estadoLibre != null)
-                {
-                    // Buscamos solo los turnos A FUTURO que tenga este paciente
-                    var turnosFuturos = await _context.Turnos
-                        .Where(t => t.PacienteId == id && t.FechaHoraInicio > DateTime.Now)
-                        .ToListAsync();
-
-                    foreach (var turno in turnosFuturos)
-                    {
-                        turno.PacienteId = null;       // Desvinculamos al paciente
-                        turno.EstadoId = estadoLibre.Id; // Ponemos el turno disponible para otro
-                    }
-                }
-
-                // BORRADO LÓGICO DEL PACIENTE
+                // Borrado Lógico
                 paciente.Activo = false;
                 _context.Pacientes.Update(paciente);
 
-                //  BLOQUEO DEL USUARIO DE IDENTITY 
-                if (!string.IsNullOrEmpty(paciente.UsuarioId))
-                {
-                    var usuarioIdentity = await _userManager.FindByIdAsync(paciente.UsuarioId);
-
-                    if (usuarioIdentity != null)
-                    {
-                        // Habilitamos el bloqueo
-                        await _userManager.SetLockoutEnabledAsync(usuarioIdentity, true);
-
-                        // Le ponemos fecha de fin de bloqueo maxima
-                        await _userManager.SetLockoutEndDateAsync(usuarioIdentity, DateTimeOffset.MaxValue);
-                    }
-                }
+                // Bloquear Usuario
+                await BloquearUsuario(paciente.UsuarioId);
 
                 await _context.SaveChangesAsync();
             }
@@ -310,6 +181,132 @@ namespace WebApplication_GestorClinico.Controllers
         private bool PacienteExists(int id)
         {
             return _context.Pacientes.Any(e => e.Id == id);
+        }
+
+
+        //   MÉTODOS PRIVADOS (Auxiliares)
+
+        private async Task<bool> ExistePacienteDuplicado(Paciente paciente)
+        {
+            var existente = await _context.Pacientes
+               .IgnoreQueryFilters()
+               .FirstOrDefaultAsync(p => p.Dni == paciente.Dni);
+
+            if (existente != null)
+            {
+                if (existente.Activo)
+                {
+                    ModelState.AddModelError("Dni", "Ya existe un paciente activo con este DNI.");
+                }
+                else
+                {
+                    ViewBag.IdReactivar = existente.Id;
+                    ViewBag.NombreReactivar = $"{existente.Apellido}, {existente.Nombre}";
+                    ModelState.AddModelError("Dni", "El paciente existe pero está inactivo.");
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private void PrepararDatosModelo(Paciente paciente)
+        {
+            var clinica = _context.Clinicas.FirstOrDefault();
+            if (clinica != null) paciente.ClinicaId = clinica.Id;
+
+            paciente.Activo = true;
+
+            // Limpieza
+            ModelState.Remove("Clinica");
+            ModelState.Remove("ClinicaId");
+            ModelState.Remove("Activo");
+            ModelState.Remove("Usuario");
+            ModelState.Remove("UsuarioId");
+            ModelState.Remove("HistoriaClinica");
+        }
+
+        private async Task<IdentityUser> CrearUsuarioIdentity(Paciente paciente)
+        {
+            if (!await _roleManager.RoleExistsAsync("Paciente"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Paciente"));
+            }
+
+            var user = new IdentityUser
+            {
+                UserName = paciente.Dni,
+                Email = paciente.Email,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManager.CreateAsync(user, paciente.Dni); // Pass = DNI
+
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(user, "Paciente");
+                return user;
+            }
+            else
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return null;
+            }
+        }
+
+        private async Task CrearHistoriaClinicaInicial(int pacienteId)
+        {
+            var nuevaHistoria = new HistoriaClinica
+            {
+                PacienteId = pacienteId
+            };
+            _context.Add(nuevaHistoria);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task LiberarTurnosFuturos(int pacienteId)
+        {
+            var estadoLibre = await _context.Estados.FirstOrDefaultAsync(e => e.Nombre == "Libre");
+
+            if (estadoLibre != null)
+            {
+                var turnosFuturos = await _context.Turnos
+                    .Where(t => t.PacienteId == pacienteId && t.FechaHoraInicio > DateTime.Now)
+                    .ToListAsync();
+
+                foreach (var turno in turnosFuturos)
+                {
+                    turno.PacienteId = null;       // Sacamos al paciente
+                    turno.EstadoId = estadoLibre.Id; // Lo dejamos disponible para otro
+                }
+            }
+        }
+
+        private async Task BloquearUsuario(string usuarioId)
+        {
+            if (!string.IsNullOrEmpty(usuarioId))
+            {
+                var user = await _userManager.FindByIdAsync(usuarioId);
+                if (user != null)
+                {
+                    await _userManager.SetLockoutEnabledAsync(user, true);
+                    await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+                }
+            }
+        }
+
+        private async Task DesbloquearUsuario(string usuarioId)
+        {
+            if (!string.IsNullOrEmpty(usuarioId))
+            {
+                var user = await _userManager.FindByIdAsync(usuarioId);
+                if (user != null)
+                {
+                    await _userManager.SetLockoutEndDateAsync(user, null);
+                }
+            }
         }
     }
 }

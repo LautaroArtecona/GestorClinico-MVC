@@ -97,5 +97,5 @@ Presiona F5 o el botón de Play en Visual Studio. El sistema creará automática
 ## 📸 Capturas de Pantalla
 
 | Inicio | Portal Médico | Portal Admin | Portal Paciente |
-|:---:|:---:|:---:|
-| ![Inicio](Screenshots/inicio.png) | ![Medico](Screenshots/portal-medico.png) | ![Admin](Screenshots/portal-admin.png) | ![Paciente](Screenshots/portal-paciente.png) |
+|:---:|:---:|:---:|:---:|
+| ![Inicio](WebApplication-GestorClinico/Screenshots/inicio.png) | ![Medico](WebApplication-GestorClinico/Screenshots/portal-medico.png) | ![Admin](WebApplication-GestorClinico/Screenshots/portal-admin.png) | ![Paciente](WebApplication-GestorClinico/Screenshots/portal-paciente.png) |
